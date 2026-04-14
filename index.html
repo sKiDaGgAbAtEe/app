@@ -1,227 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>sKiDa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@300;400;500&display=swap');
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: 'Lato', sans-serif;
+    }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ── BACKGROUND ── */
+    #bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse at 30% 20%, #1a3a20 0%, #0a1a10 40%, #0d0a1a 70%, #1a0d08 100%);
+    }
+    #bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 65% 75%, rgba(180,80,0,0.35) 0%, transparent 55%);
+    }
+    #bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 25% 50%, rgba(0,120,80,0.2) 0%, transparent 60%);
+    }
 
-  .phone-frame {
-    width: 390px;
-    height: 844px;
-    margin: 2rem auto;
-    border-radius: 48px;
-    border: 2.5px solid #333;
-    overflow: hidden;
-    position: relative;
-    background: #000;
-    box-shadow: 0 0 0 6px #111, 0 30px 80px rgba(0,0,0,0.7);
-    font-family: 'Inter', sans-serif;
-  }
+    /* video bg — swap src to your MP4 */
+    #bg-video {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 1;
+      filter: brightness(0.45);
+      display: none; /* remove 'display:none' once you have the video file */
+    }
 
-  .video-bg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: 0;
-    filter: brightness(0.55);
-  }
+    #overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      background: linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.08) 0%,
+        rgba(0,0,0,0.04) 30%,
+        rgba(0,0,0,0.5) 65%,
+        rgba(0,0,0,0.88) 100%
+      );
+    }
 
-  .overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      to bottom,
-      rgba(0,0,0,0.1) 0%,
-      rgba(0,0,0,0.05) 30%,
-      rgba(0,0,0,0.55) 65%,
-      rgba(0,0,0,0.88) 100%
-    );
-    z-index: 1;
-  }
+    /* ── LANDING SCREEN ── */
+    #landing {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      transition: opacity 1.4s ease;
+    }
 
-  .content {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 0 0 28px 0;
-  }
+    #landing.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
 
-  .name-tag {
-    position: absolute;
-    bottom: 320px;
-    left: 28px;
-    opacity: 0;
-    animation: fadeInName 2.2s ease forwards 1s;
-  }
+    #landing-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 30% 20%, #1a3a20 0%, #0a1a10 40%, #0d0a1a 70%, #1a0d08 100%);
+    }
+    #landing-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 65% 75%, rgba(180,80,0,0.28) 0%, transparent 55%);
+    }
 
-  .name-tag h1 {
-    font-family: 'Cinzel', serif;
-    font-size: 38px;
-    font-weight: 600;
-    letter-spacing: 4px;
-    color: #fff;
-    text-shadow: 0 0 30px rgba(255,180,60,0.5);
-    line-height: 1;
-  }
+    #landing-inner {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      user-select: none;
+    }
 
-  .name-tag .tagline {
-    font-size: 11px;
-    letter-spacing: 2.5px;
-    color: rgba(255,255,255,0.55);
-    margin-top: 5px;
-    text-transform: uppercase;
-  }
+    #landing-logo {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(52px, 14vw, 96px);
+      font-weight: 600;
+      letter-spacing: 8px;
+      color: #fff;
+      text-shadow: 0 0 50px rgba(255,180,60,0.35);
+      animation: breathe 3.5s ease-in-out infinite;
+      line-height: 1;
+    }
 
-  @keyframes fadeInName {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+    @keyframes breathe {
+      0%, 100% { text-shadow: 0 0 40px rgba(255,180,60,0.25); }
+      50%       { text-shadow: 0 0 70px rgba(255,180,60,0.55), 0 0 120px rgba(255,130,0,0.2); }
+    }
 
-  .cards-scroll {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 0 18px;
-    max-height: 290px;
-    overflow-y: auto;
-    scrollbar-width: none;
-  }
+    #landing-sub {
+      font-size: clamp(10px, 2vw, 13px);
+      letter-spacing: 4px;
+      color: rgba(255,255,255,0.38);
+      text-transform: uppercase;
+      margin-top: 10px;
+      margin-bottom: 52px;
+    }
 
-  .cards-scroll::-webkit-scrollbar { display: none; }
+    #enter-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.22);
+      color: rgba(255,255,255,0.75);
+      font-family: 'Lato', sans-serif;
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      padding: 14px 44px;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: border-color 0.3s, color 0.3s, background 0.3s, transform 0.15s;
+    }
+    #enter-btn:hover {
+      border-color: rgba(255,180,60,0.5);
+      color: #fff;
+      background: rgba(255,180,60,0.07);
+    }
+    #enter-btn:active { transform: scale(0.97); }
 
-  .slime-card {
-    border-radius: 22px;
-    padding: 14px 18px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    cursor: pointer;
-    transition: transform 0.15s ease, opacity 0.15s ease;
-    border: 1px solid rgba(255,255,255,0.08);
-    text-decoration: none;
-    color: #fff;
-    backdrop-filter: blur(14px) saturate(1.4);
-    -webkit-backdrop-filter: blur(14px) saturate(1.4);
-    animation: slideUp 0.4s ease both;
-  }
+    #music-hint {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.18);
+      margin-top: 18px;
+      text-transform: uppercase;
+    }
 
-  .slime-card:hover { transform: scale(1.02); }
-  .slime-card:active { transform: scale(0.98); opacity: 0.85; }
+    /* ── DASHBOARD ── */
+    #dashboard {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1s ease 0.5s;
+    }
+    #dashboard.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
 
-  .slime-card:nth-child(1) { animation-delay: 1.6s; background: rgba(20, 60, 40, 0.72); }
-  .slime-card:nth-child(2) { animation-delay: 1.75s; background: rgba(40, 20, 70, 0.72); }
-  .slime-card:nth-child(3) { animation-delay: 1.9s; background: rgba(60, 30, 10, 0.72); }
-  .slime-card:nth-child(4) { animation-delay: 2.05s; background: rgba(10, 40, 70, 0.72); }
-  .slime-card:nth-child(5) { animation-delay: 2.2s; background: rgba(50, 10, 40, 0.72); }
-  .slime-card:nth-child(6) { animation-delay: 2.35s; background: rgba(30, 50, 10, 0.72); }
-  .slime-card:nth-child(7) { animation-delay: 2.5s; background: rgba(55, 40, 5, 0.72); }
+    /* top bar */
+    #topbar {
+      position: relative;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 28px 10px;
+      flex-shrink: 0;
+    }
 
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+    #name-block {
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.9s ease, transform 0.9s ease;
+    }
+    #name-block.show { opacity: 1; transform: translateY(0); }
 
-  .card-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    flex-shrink: 0;
-  }
+    #name-block h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(28px, 7vw, 42px);
+      font-weight: 600;
+      letter-spacing: 5px;
+      color: #fff;
+      text-shadow: 0 0 28px rgba(255,180,60,0.4);
+      line-height: 1;
+    }
 
-  .card-text { flex: 1; }
-  .card-title { font-size: 14px; font-weight: 500; letter-spacing: 0.3px; }
-  .card-sub { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; letter-spacing: 0.3px; }
+    #name-block .tagline {
+      font-size: 10px;
+      letter-spacing: 2.5px;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      margin-top: 5px;
+    }
 
-  .card-arrow {
-    font-size: 16px;
-    color: rgba(255,255,255,0.3);
-  }
+    /* volume button */
+    #vol-btn {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.55);
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, color 0.2s;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    #vol-btn:hover { background: rgba(255,255,255,0.13); color: #fff; }
 
-  .live-pill {
-    background: #ff4444;
-    color: #fff;
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    padding: 2px 7px;
-    border-radius: 20px;
-    text-transform: uppercase;
-    animation: pulse 1.5s infinite;
-  }
+    /* tab nav */
+    #tab-nav {
+      position: relative;
+      z-index: 20;
+      display: flex;
+      gap: 6px;
+      padding: 0 20px 14px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex-shrink: 0;
+      opacity: 0;
+      transition: opacity 0.7s ease 0.2s;
+    }
+    #tab-nav.show { opacity: 1; }
+    #tab-nav::-webkit-scrollbar { display: none; }
 
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
+    .tab-btn {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.45);
+      font-family: 'Lato', sans-serif;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 7px 16px;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .tab-btn.active {
+      background: rgba(255,180,60,0.16);
+      border-color: rgba(255,180,60,0.4);
+      color: rgba(255,215,130,0.95);
+    }
+    .tab-btn:hover:not(.active) {
+      background: rgba(255,255,255,0.11);
+      color: rgba(255,255,255,0.7);
+    }
 
-  .notch {
-    position: absolute;
-    top: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 120px;
-    height: 34px;
-    background: #000;
-    border-radius: 20px;
-    z-index: 10;
-  }
+    /* panels container */
+    #panels {
+      position: relative;
+      z-index: 15;
+      flex: 1;
+      overflow: hidden;
+    }
 
-  .status-bar {
-    position: absolute;
-    top: 16px;
-    left: 24px;
-    right: 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 11;
-    font-size: 10px;
-    color: rgba(255,255,255,0.7);
-    font-weight: 500;
-    pointer-events: none;
-  }
+    /* ── CARDS PANEL ── */
+    .cards-panel {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      padding: 0 20px 32px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.1) transparent;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    .cards-panel.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .cards-panel::-webkit-scrollbar { width: 3px; }
+    .cards-panel::-webkit-scrollbar-track { background: transparent; }
+    .cards-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 
-  .c1 { background: rgba(30,120,70,0.4); }
-  .c2 { background: rgba(80,30,140,0.4); }
-  .c3 { background: rgba(140,60,20,0.4); }
-  .c4 { background: rgba(20,80,150,0.4); }
-  .c5 { background: rgba(130,20,80,0.4); }
-  .c6 { background: rgba(60,110,20,0.4); }
-  .c7 { background: rgba(130,90,10,0.4); }
-</style>
+    .slime-card {
+      border-radius: 22px;
+      padding: 15px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+      border: 1px solid rgba(255,255,255,0.08);
+      text-decoration: none;
+      color: #fff;
+      backdrop-filter: blur(16px) saturate(1.4);
+      -webkit-backdrop-filter: blur(16px) saturate(1.4);
+      flex-shrink: 0;
+    }
+    .slime-card:hover { transform: scale(1.018); }
+    .slime-card:active { transform: scale(0.98); opacity: 0.82; }
 
-<div class="phone-frame">
-  <div class="notch"></div>
-  <div class="status-bar">
-    <span>9:41</span>
-    <span>●●● ▲ 🔋</span>
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 21px;
+      flex-shrink: 0;
+    }
+
+    .card-text { flex: 1; min-width: 0; }
+    .card-title { font-size: 14px; font-weight: 500; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-sub   { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 3px; letter-spacing: 0.3px; }
+
+    .card-arrow { font-size: 20px; color: rgba(255,255,255,0.25); flex-shrink: 0; }
+
+    .live-pill {
+      background: #e03333;
+      color: #fff;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      animation: pulse 1.6s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* ── IFRAME PANEL ── */
+    .iframe-panel {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    .iframe-panel.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .iframe-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 20px 12px;
+      flex-shrink: 0;
+    }
+
+    .back-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.13);
+      color: rgba(255,255,255,0.6);
+      font-family: 'Lato', sans-serif;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+
+    .iframe-label {
+      font-size: 11px;
+      letter-spacing: 2.5px;
+      color: rgba(255,255,255,0.38);
+      text-transform: uppercase;
+    }
+
+    .iframe-wrap {
+      flex: 1;
+      margin: 0 20px 24px;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.35);
+    }
+    .iframe-wrap iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* stagger cards on first reveal */
+    .slime-card { animation: slideUp 0.45s ease both; }
+    .slime-card:nth-child(1) { animation-delay: 0.05s; }
+    .slime-card:nth-child(2) { animation-delay: 0.13s; }
+    .slime-card:nth-child(3) { animation-delay: 0.21s; }
+    .slime-card:nth-child(4) { animation-delay: 0.29s; }
+    .slime-card:nth-child(5) { animation-delay: 0.37s; }
+    .slime-card:nth-child(6) { animation-delay: 0.45s; }
+    .slime-card:nth-child(7) { animation-delay: 0.53s; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- background layers -->
+<div id="bg"></div>
+<video id="bg-video" src="/app/bg.mp4" autoplay muted loop playsinline></video>
+<div id="overlay"></div>
+
+<!-- audio -->
+<audio id="ambient" src="/app/1.mp3" loop preload="auto"></audio>
+
+<!-- ════════════ LANDING ════════════ -->
+<div id="landing">
+  <div id="landing-bg"></div>
+  <div id="landing-inner">
+    <div id="landing-logo">sKiDa</div>
+    <div id="landing-sub">find your better self</div>
+    <button id="enter-btn">Enter</button>
+    <div id="music-hint">♪ &nbsp; ambient music</div>
   </div>
+</div>
 
-  <div style="position:absolute;inset:0;background:url('') center/cover; z-index:0;">
-    <div style="width:100%;height:100%;background: radial-gradient(ellipse at 30% 20%, #1a3a20 0%, #0a1a10 40%, #0d0a1a 70%, #1a0d08 100%); opacity:0.98;"></div>
-    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 65% 75%, rgba(180,80,0,0.35) 0%, transparent 55%);"></div>
-    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 25% 50%, rgba(0,120,80,0.2) 0%, transparent 60%);"></div>
-  </div>
+<!-- ════════════ DASHBOARD ════════════ -->
+<div id="dashboard">
 
-  <div class="overlay"></div>
-
-  <div class="content">
-    <div class="name-tag">
+  <div id="topbar">
+    <div id="name-block">
       <h1>sKiDa</h1>
       <div class="tagline">find your better self</div>
     </div>
+    <button id="vol-btn" title="Toggle mute">🔊</button>
+  </div>
 
-    <div class="cards-scroll">
-      <a class="slime-card" href="https://twitch.tv/sKiDaGgAbAtEe" target="_blank">
-        <div class="card-icon c1" style="font-size:22px;">📺</div>
+  <div id="tab-nav">
+    <button class="tab-btn active" data-tab="home">Home</button>
+    <button class="tab-btn" data-tab="essays">Essays</button>
+    <button class="tab-btn" data-tab="journal">Journal</button>
+    <button class="tab-btn" data-tab="schedule">Schedule</button>
+    <button class="tab-btn" data-tab="clips">Clips & VODs</button>
+    <button class="tab-btn" data-tab="garden">Support</button>
+    <button class="tab-btn" data-tab="about">About</button>
+  </div>
+
+  <div id="panels">
+
+    <!-- HOME -->
+    <div class="cards-panel active" id="panel-home">
+
+      <a class="slime-card" href="https://twitch.tv/sKiDaGgAbAtEe" target="_blank" rel="noopener"
+         style="background:rgba(20,60,40,0.72);">
+        <div class="card-icon" style="background:rgba(30,120,70,0.4);">📺</div>
         <div class="card-text">
           <div class="card-title">Live on Twitch</div>
           <div class="card-sub">twitch.tv/sKiDaGgAbAtEe</div>
@@ -229,17 +484,17 @@
         <div class="live-pill">live</div>
       </a>
 
-      <div class="slime-card" onclick="sendPrompt('Show me the Essays section of the sKiDa UI')">
-        <div class="card-icon c2" style="font-size:20px;">✍️</div>
+      <div class="slime-card" data-open="essays" style="background:rgba(40,20,70,0.72);">
+        <div class="card-icon" style="background:rgba(80,30,140,0.4);">✍️</div>
         <div class="card-text">
           <div class="card-title">Essays</div>
-          <div class="card-sub">thoughts on growth & healing</div>
+          <div class="card-sub">thoughts on growth &amp; healing</div>
         </div>
         <div class="card-arrow">›</div>
       </div>
 
-      <div class="slime-card" onclick="sendPrompt('Show me the Journal section of the sKiDa UI')">
-        <div class="card-icon c3" style="font-size:20px;">📖</div>
+      <div class="slime-card" data-open="journal" style="background:rgba(60,30,10,0.72);">
+        <div class="card-icon" style="background:rgba(140,60,20,0.4);">📖</div>
         <div class="card-text">
           <div class="card-title">Journal</div>
           <div class="card-sub">the honest story</div>
@@ -247,26 +502,26 @@
         <div class="card-arrow">›</div>
       </div>
 
-      <div class="slime-card" onclick="sendPrompt('Show me the Schedule section of the sKiDa UI')">
-        <div class="card-icon c4" style="font-size:20px;">🗓</div>
+      <div class="slime-card" data-open="schedule" style="background:rgba(10,40,70,0.72);">
+        <div class="card-icon" style="background:rgba(20,80,150,0.4);">🗓</div>
         <div class="card-text">
           <div class="card-title">Schedule + Events</div>
-          <div class="card-sub">when & where to find me</div>
+          <div class="card-sub">when &amp; where to find me</div>
         </div>
         <div class="card-arrow">›</div>
       </div>
 
-      <div class="slime-card" onclick="sendPrompt('Show me the Clips & VODs section of the sKiDa UI')">
-        <div class="card-icon c5" style="font-size:20px;">🎞</div>
+      <div class="slime-card" data-open="clips" style="background:rgba(50,10,40,0.72);">
+        <div class="card-icon" style="background:rgba(130,20,80,0.4);">🎞</div>
         <div class="card-text">
-          <div class="card-title">Clips & VODs</div>
+          <div class="card-title">Clips &amp; VODs</div>
           <div class="card-sub">YouTube · Patreon</div>
         </div>
         <div class="card-arrow">›</div>
       </div>
 
-      <div class="slime-card" onclick="sendPrompt('Show me the Patreon support section of the sKiDa UI')">
-        <div class="card-icon c6" style="font-size:20px;">🌿</div>
+      <div class="slime-card" data-open="garden" style="background:rgba(30,50,10,0.72);">
+        <div class="card-icon" style="background:rgba(60,110,20,0.4);">🌿</div>
         <div class="card-text">
           <div class="card-title">Support the Garden</div>
           <div class="card-sub">Patreon membership</div>
@@ -274,14 +529,142 @@
         <div class="card-arrow">›</div>
       </div>
 
-      <div class="slime-card" onclick="sendPrompt('Show me the About sKiDa section of the UI')">
-        <div class="card-icon c7" style="font-size:20px;">🕯</div>
+      <div class="slime-card" data-open="about" style="background:rgba(55,40,5,0.72);">
+        <div class="card-icon" style="background:rgba(130,90,10,0.4);">🕯</div>
         <div class="card-text">
           <div class="card-title">About sKiDa</div>
           <div class="card-sub">the vtuber who came back</div>
         </div>
         <div class="card-arrow">›</div>
       </div>
+
+    </div><!-- /panel-home -->
+
+    <!-- ESSAYS -->
+    <div class="iframe-panel" id="panel-essays">
+      <div class="iframe-header">
+        <button class="back-btn">‹ Back</button>
+        <span class="iframe-label">Essays</span>
+      </div>
+      <div class="iframe-wrap">
+        <iframe src="https://skidaggabatee.github.io/essay/index.html" title="Essays" loading="lazy"></iframe>
+      </div>
     </div>
-  </div>
-</div>
+
+    <!-- JOURNAL -->
+    <div class="iframe-panel" id="panel-journal">
+      <div class="iframe-header">
+        <button class="back-btn">‹ Back</button>
+        <span class="iframe-label">Journal</span>
+      </div>
+      <div class="iframe-wrap">
+        <iframe src="/app/journal/index.html" title="Journal" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <!-- SCHEDULE -->
+    <div class="iframe-panel" id="panel-schedule">
+      <div class="iframe-header">
+        <button class="back-btn">‹ Back</button>
+        <span class="iframe-label">Schedule + Events</span>
+      </div>
+      <div class="iframe-wrap">
+        <iframe src="/app/schedule/index.html" title="Schedule" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <!-- CLIPS -->
+    <div class="iframe-panel" id="panel-clips">
+      <div class="iframe-header">
+        <button class="back-btn">‹ Back</button>
+        <span class="iframe-label">Clips &amp; VODs</span>
+      </div>
+      <div class="iframe-wrap">
+        <iframe src="/app/clips/index.html" title="Clips &amp; VODs" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <!-- GARDEN / SUPPORT -->
+    <div class="iframe-panel" id="panel-garden">
+      <div class="iframe-header">
+        <button class="back-btn">‹ Back</button>
+        <span class="iframe-label">Support the Garden</span>
+      </div>
+      <div class="iframe-wrap">
+        <iframe src="/app/garden/index.html" title="Support" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="iframe-panel" id="panel-about">
+      <div class="iframe-header">
+        <button class="back-btn">‹ Back</button>
+        <span class="iframe-label">About sKiDa</span>
+      </div>
+      <div class="iframe-wrap">
+        <iframe src="/app/about/index.html" title="About sKiDa" loading="lazy"></iframe>
+      </div>
+    </div>
+
+  </div><!-- /panels -->
+</div><!-- /dashboard -->
+
+<script>
+  const landing   = document.getElementById('landing');
+  const dashboard = document.getElementById('dashboard');
+  const nameBlock = document.getElementById('name-block');
+  const tabNav    = document.getElementById('tab-nav');
+  const enterBtn  = document.getElementById('enter-btn');
+  const volBtn    = document.getElementById('vol-btn');
+  const audio     = document.getElementById('ambient');
+
+  audio.volume = 0.06;
+  let muted = false;
+
+  // ── Enter ──
+  enterBtn.addEventListener('click', () => {
+    audio.play().catch(() => {});
+    landing.classList.add('fade-out');
+    setTimeout(() => {
+      landing.style.display = 'none';
+      dashboard.classList.add('visible');
+      setTimeout(() => {
+        nameBlock.classList.add('show');
+        tabNav.classList.add('show');
+      }, 150);
+    }, 1400);
+  });
+
+  // ── Volume toggle ──
+  volBtn.addEventListener('click', () => {
+    muted = !muted;
+    audio.muted = muted;
+    volBtn.textContent = muted ? '🔇' : '🔊';
+  });
+
+  // ── Tab nav ──
+  function showTab(id) {
+    document.querySelectorAll('.cards-panel, .iframe-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const panel = document.getElementById('panel-' + id);
+    if (panel) panel.classList.add('active');
+    const btn = document.querySelector('[data-tab="' + id + '"]');
+    if (btn) btn.classList.add('active');
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => showTab(btn.dataset.tab));
+  });
+
+  // cards → iframe panels
+  document.querySelectorAll('[data-open]').forEach(card => {
+    card.addEventListener('click', () => showTab(card.dataset.open));
+  });
+
+  // back buttons
+  document.querySelectorAll('.back-btn').forEach(btn => {
+    btn.addEventListener('click', () => showTab('home'));
+  });
+</script>
+</body>
+</html>
