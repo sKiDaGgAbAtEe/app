@@ -18,13 +18,11 @@
       font-family: 'Lato', sans-serif;
     }
 
-    /* ── BACKGROUND ── */
     #bg {
       position: fixed;
       inset: 0;
       z-index: 0;
-      background:
-        radial-gradient(ellipse at 30% 20%, #1a3a20 0%, #0a1a10 40%, #0d0a1a 70%, #1a0d08 100%);
+      background: radial-gradient(ellipse at 30% 20%, #1a3a20 0%, #0a1a10 40%, #0d0a1a 70%, #1a0d08 100%);
     }
     #bg::before {
       content: '';
@@ -39,7 +37,6 @@
       background: radial-gradient(ellipse at 25% 50%, rgba(0,120,80,0.2) 0%, transparent 60%);
     }
 
-    /* video bg — swap src to your MP4 */
     #bg-video {
       position: fixed;
       inset: 0;
@@ -48,7 +45,6 @@
       object-fit: cover;
       z-index: 1;
       filter: brightness(0.45);
-    
     }
 
     #overlay {
@@ -57,30 +53,25 @@
       z-index: 2;
       background: linear-gradient(
         to bottom,
-        rgba(0,0,0,0.08) 0%,
-        rgba(0,0,0,0.04) 30%,
-        rgba(0,0,0,0.5) 65%,
-        rgba(0,0,0,0.88) 100%
+        rgba(0,0,0,0.06) 0%,
+        rgba(0,0,0,0.02) 30%,
+        rgba(0,0,0,0.45) 65%,
+        rgba(0,0,0,0.82) 100%
       );
     }
 
-    /* ── LANDING SCREEN ── */
+    /* ── LANDING ── */
     #landing {
       position: fixed;
       inset: 0;
       z-index: 100;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       background: #000;
       transition: opacity 1.4s ease;
     }
-
-    #landing.fade-out {
-      opacity: 0;
-      pointer-events: none;
-    }
+    #landing.fade-out { opacity: 0; pointer-events: none; }
 
     #landing-bg {
       position: absolute;
@@ -109,11 +100,9 @@
       font-weight: 600;
       letter-spacing: 8px;
       color: #fff;
-      text-shadow: 0 0 50px rgba(255,180,60,0.35);
       animation: breathe 3.5s ease-in-out infinite;
       line-height: 1;
     }
-
     @keyframes breathe {
       0%, 100% { text-shadow: 0 0 40px rgba(255,180,60,0.25); }
       50%       { text-shadow: 0 0 70px rgba(255,180,60,0.55), 0 0 120px rgba(255,130,0,0.2); }
@@ -122,7 +111,7 @@
     #landing-sub {
       font-size: clamp(10px, 2vw, 13px);
       letter-spacing: 4px;
-      color: rgba(255,255,255,0.38);
+      color: rgba(255,255,255,0.35);
       text-transform: uppercase;
       margin-top: 10px;
       margin-bottom: 52px;
@@ -130,8 +119,8 @@
 
     #enter-btn {
       background: transparent;
-      border: 1px solid rgba(255,255,255,0.22);
-      color: rgba(255,255,255,0.75);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.72);
       font-family: 'Lato', sans-serif;
       font-size: 11px;
       letter-spacing: 4px;
@@ -151,7 +140,7 @@
     #music-hint {
       font-size: 10px;
       letter-spacing: 2px;
-      color: rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.16);
       margin-top: 18px;
       text-transform: uppercase;
     }
@@ -167,19 +156,15 @@
       pointer-events: none;
       transition: opacity 1s ease 0.5s;
     }
-    #dashboard.visible {
-      opacity: 1;
-      pointer-events: all;
-    }
+    #dashboard.visible { opacity: 1; pointer-events: all; }
 
-    /* top bar */
     #topbar {
       position: relative;
       z-index: 20;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 24px 28px 10px;
+      padding: 22px 26px 8px;
       flex-shrink: 0;
     }
 
@@ -192,48 +177,45 @@
 
     #name-block h1 {
       font-family: 'Cinzel', serif;
-      font-size: clamp(28px, 7vw, 42px);
+      font-size: clamp(26px, 6.5vw, 40px);
       font-weight: 600;
       letter-spacing: 5px;
       color: #fff;
       text-shadow: 0 0 28px rgba(255,180,60,0.4);
       line-height: 1;
     }
-
     #name-block .tagline {
-      font-size: 10px;
+      font-size: 9px;
       letter-spacing: 2.5px;
-      color: rgba(255,255,255,0.4);
+      color: rgba(255,255,255,0.35);
       text-transform: uppercase;
-      margin-top: 5px;
+      margin-top: 4px;
     }
 
-    /* volume button */
     #vol-btn {
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.12);
-      color: rgba(255,255,255,0.55);
-      width: 38px;
-      height: 38px;
+      background: rgba(0,0,0,0.18);
+      border: 1px solid rgba(255,255,255,0.09);
+      color: rgba(255,255,255,0.4);
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 13px;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: background 0.2s, color 0.2s;
       flex-shrink: 0;
-      line-height: 1;
     }
-    #vol-btn:hover { background: rgba(255,255,255,0.13); color: #fff; }
+    #vol-btn:hover { background: rgba(255,255,255,0.09); color: #fff; }
 
-    /* tab nav */
+    /* ── COMPACT GHOST TAB NAV ── */
     #tab-nav {
       position: relative;
       z-index: 20;
       display: flex;
-      gap: 6px;
-      padding: 0 20px 14px;
+      gap: 4px;
+      padding: 0 20px 8px;
       overflow-x: auto;
       scrollbar-width: none;
       flex-shrink: 0;
@@ -244,31 +226,33 @@
     #tab-nav::-webkit-scrollbar { display: none; }
 
     .tab-btn {
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.1);
-      color: rgba(255,255,255,0.45);
+      background: rgba(0,0,0,0.12);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.28);
       font-family: 'Lato', sans-serif;
-      font-size: 10px;
-      letter-spacing: 2px;
+      font-size: 9px;
+      letter-spacing: 1.6px;
       text-transform: uppercase;
-      padding: 7px 16px;
-      border-radius: 30px;
+      padding: 3px 10px;
+      border-radius: 20px;
       cursor: pointer;
       transition: all 0.2s ease;
       white-space: nowrap;
       flex-shrink: 0;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
     .tab-btn.active {
-      background: rgba(255,180,60,0.16);
-      border-color: rgba(255,180,60,0.4);
-      color: rgba(255,215,130,0.95);
+      background: rgba(255,180,60,0.1);
+      border-color: rgba(255,180,60,0.3);
+      color: rgba(255,210,120,0.88);
     }
     .tab-btn:hover:not(.active) {
-      background: rgba(255,255,255,0.11);
-      color: rgba(255,255,255,0.7);
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.52);
     }
 
-    /* panels container */
+    /* ── PANELS ── */
     #panels {
       position: relative;
       z-index: 15;
@@ -276,7 +260,6 @@
       overflow: hidden;
     }
 
-    /* ── CARDS PANEL ── */
     .cards-panel {
       position: absolute;
       inset: 0;
@@ -286,61 +269,69 @@
       padding: 0 20px 32px;
       overflow-y: auto;
       scrollbar-width: thin;
-      scrollbar-color: rgba(255,255,255,0.1) transparent;
+      scrollbar-color: rgba(255,255,255,0.07) transparent;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.35s ease;
     }
-    .cards-panel.active {
-      opacity: 1;
-      pointer-events: all;
-    }
-    .cards-panel::-webkit-scrollbar { width: 3px; }
-    .cards-panel::-webkit-scrollbar-track { background: transparent; }
-    .cards-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+    .cards-panel.active { opacity: 1; pointer-events: all; }
+    .cards-panel::-webkit-scrollbar { width: 2px; }
+    .cards-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 4px; }
 
     .slime-card {
-      border-radius: 22px;
-      padding: 15px 18px;
+      border-radius: 20px;
+      padding: 13px 16px;
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 13px;
       cursor: pointer;
       transition: transform 0.15s ease, opacity 0.15s ease;
-      border: 1px solid rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.07);
       text-decoration: none;
       color: #fff;
       backdrop-filter: blur(16px) saturate(1.4);
       -webkit-backdrop-filter: blur(16px) saturate(1.4);
       flex-shrink: 0;
+      animation: slideUp 0.45s ease both;
     }
-    .slime-card:hover { transform: scale(1.018); }
-    .slime-card:active { transform: scale(0.98); opacity: 0.82; }
+    .slime-card:hover { transform: scale(1.015); }
+    .slime-card:active { transform: scale(0.98); opacity: 0.8; }
+
+    .slime-card:nth-child(1) { animation-delay: 0.05s; }
+    .slime-card:nth-child(2) { animation-delay: 0.12s; }
+    .slime-card:nth-child(3) { animation-delay: 0.19s; }
+    .slime-card:nth-child(4) { animation-delay: 0.26s; }
+    .slime-card:nth-child(5) { animation-delay: 0.33s; }
+    .slime-card:nth-child(6) { animation-delay: 0.40s; }
+    .slime-card:nth-child(7) { animation-delay: 0.47s; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
 
     .card-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 14px;
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 21px;
+      font-size: 20px;
       flex-shrink: 0;
     }
-
     .card-text { flex: 1; min-width: 0; }
-    .card-title { font-size: 14px; font-weight: 500; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .card-sub   { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 3px; letter-spacing: 0.3px; }
-
-    .card-arrow { font-size: 20px; color: rgba(255,255,255,0.25); flex-shrink: 0; }
+    .card-title { font-size: 13px; font-weight: 500; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-sub   { font-size: 10px; color: rgba(255,255,255,0.42); margin-top: 3px; letter-spacing: 0.3px; }
+    .card-arrow { font-size: 19px; color: rgba(255,255,255,0.22); flex-shrink: 0; }
 
     .live-pill {
-      background: #e03333;
+      background: #d93030;
       color: #fff;
       font-size: 8px;
       font-weight: 700;
       letter-spacing: 1.8px;
-      padding: 3px 8px;
+      padding: 2px 7px;
       border-radius: 20px;
       text-transform: uppercase;
       animation: pulse 1.6s ease-in-out infinite;
@@ -348,10 +339,9 @@
     }
     @keyframes pulse {
       0%, 100% { opacity: 1; }
-      50%       { opacity: 0.4; }
+      50%       { opacity: 0.38; }
     }
 
-    /* ── IFRAME PANEL ── */
     .iframe-panel {
       position: absolute;
       inset: 0;
@@ -361,48 +351,45 @@
       pointer-events: none;
       transition: opacity 0.35s ease;
     }
-    .iframe-panel.active {
-      opacity: 1;
-      pointer-events: all;
-    }
+    .iframe-panel.active { opacity: 1; pointer-events: all; }
 
     .iframe-header {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 0 20px 12px;
+      padding: 0 20px 10px;
       flex-shrink: 0;
     }
-
     .back-btn {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.13);
-      color: rgba(255,255,255,0.6);
+      background: rgba(0,0,0,0.18);
+      border: 1px solid rgba(255,255,255,0.09);
+      color: rgba(255,255,255,0.52);
       font-family: 'Lato', sans-serif;
-      font-size: 10px;
+      font-size: 9px;
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      padding: 6px 14px;
+      padding: 4px 12px;
       border-radius: 20px;
       cursor: pointer;
       transition: background 0.2s, color 0.2s;
+      backdrop-filter: blur(8px);
     }
-    .back-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    .back-btn:hover { background: rgba(255,255,255,0.09); color: #fff; }
 
     .iframe-label {
-      font-size: 11px;
+      font-size: 10px;
       letter-spacing: 2.5px;
-      color: rgba(255,255,255,0.38);
+      color: rgba(255,255,255,0.28);
       text-transform: uppercase;
     }
 
     .iframe-wrap {
       flex: 1;
-      margin: 0 20px 24px;
-      border-radius: 20px;
+      margin: 0 20px 20px;
+      border-radius: 18px;
       overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(0,0,0,0.28);
     }
     .iframe-wrap iframe {
       width: 100%;
@@ -410,34 +397,17 @@
       border: none;
       display: block;
     }
-
-    /* stagger cards on first reveal */
-    .slime-card { animation: slideUp 0.45s ease both; }
-    .slime-card:nth-child(1) { animation-delay: 0.05s; }
-    .slime-card:nth-child(2) { animation-delay: 0.13s; }
-    .slime-card:nth-child(3) { animation-delay: 0.21s; }
-    .slime-card:nth-child(4) { animation-delay: 0.29s; }
-    .slime-card:nth-child(5) { animation-delay: 0.37s; }
-    .slime-card:nth-child(6) { animation-delay: 0.45s; }
-    .slime-card:nth-child(7) { animation-delay: 0.53s; }
-
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(18px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
   </style>
 </head>
 <body>
 
-<!-- background layers -->
 <div id="bg"></div>
 <video id="bg-video" src="/app/bg.mp4" autoplay muted loop playsinline></video>
 <div id="overlay"></div>
 
-<!-- audio -->
 <audio id="ambient" src="/app/1.mp3" loop preload="auto"></audio>
 
-<!-- ════════════ LANDING ════════════ -->
+<!-- ═══ LANDING ═══ -->
 <div id="landing">
   <div id="landing-bg"></div>
   <div id="landing-inner">
@@ -448,7 +418,7 @@
   </div>
 </div>
 
-<!-- ════════════ DASHBOARD ════════════ -->
+<!-- ═══ DASHBOARD ═══ -->
 <div id="dashboard">
 
   <div id="topbar">
@@ -464,7 +434,7 @@
     <button class="tab-btn" data-tab="essays">Essays</button>
     <button class="tab-btn" data-tab="journal">Journal</button>
     <button class="tab-btn" data-tab="schedule">Schedule</button>
-    <button class="tab-btn" data-tab="clips">Clips & VODs</button>
+    <button class="tab-btn" data-tab="clips">Clips</button>
     <button class="tab-btn" data-tab="garden">Support</button>
     <button class="tab-btn" data-tab="about">About</button>
   </div>
@@ -473,10 +443,9 @@
 
     <!-- HOME -->
     <div class="cards-panel active" id="panel-home">
-
       <a class="slime-card" href="https://twitch.tv/sKiDaGgAbAtEe" target="_blank" rel="noopener"
-         style="background:rgba(20,60,40,0.72);">
-        <div class="card-icon" style="background:rgba(30,120,70,0.4);">📺</div>
+         style="background:rgba(20,60,40,0.70);">
+        <div class="card-icon" style="background:rgba(30,120,70,0.38);">📺</div>
         <div class="card-text">
           <div class="card-title">Live on Twitch</div>
           <div class="card-sub">twitch.tv/sKiDaGgAbAtEe</div>
@@ -484,8 +453,8 @@
         <div class="live-pill">live</div>
       </a>
 
-      <div class="slime-card" data-open="essays" style="background:rgba(40,20,70,0.72);">
-        <div class="card-icon" style="background:rgba(80,30,140,0.4);">✍️</div>
+      <div class="slime-card" data-open="essays" style="background:rgba(40,20,70,0.70);">
+        <div class="card-icon" style="background:rgba(80,30,140,0.38);">✍️</div>
         <div class="card-text">
           <div class="card-title">Essays</div>
           <div class="card-sub">thoughts on growth &amp; healing</div>
@@ -493,8 +462,8 @@
         <div class="card-arrow">›</div>
       </div>
 
-      <div class="slime-card" data-open="journal" style="background:rgba(60,30,10,0.72);">
-        <div class="card-icon" style="background:rgba(140,60,20,0.4);">📖</div>
+      <div class="slime-card" data-open="journal" style="background:rgba(60,30,10,0.70);">
+        <div class="card-icon" style="background:rgba(140,60,20,0.38);">📖</div>
         <div class="card-text">
           <div class="card-title">Journal</div>
           <div class="card-sub">the honest story</div>
@@ -502,8 +471,8 @@
         <div class="card-arrow">›</div>
       </div>
 
-      <div class="slime-card" data-open="schedule" style="background:rgba(10,40,70,0.72);">
-        <div class="card-icon" style="background:rgba(20,80,150,0.4);">🗓</div>
+      <div class="slime-card" data-open="schedule" style="background:rgba(10,40,70,0.70);">
+        <div class="card-icon" style="background:rgba(20,80,150,0.38);">🗓</div>
         <div class="card-text">
           <div class="card-title">Schedule + Events</div>
           <div class="card-sub">when &amp; where to find me</div>
@@ -511,8 +480,8 @@
         <div class="card-arrow">›</div>
       </div>
 
-      <div class="slime-card" data-open="clips" style="background:rgba(50,10,40,0.72);">
-        <div class="card-icon" style="background:rgba(130,20,80,0.4);">🎞</div>
+      <div class="slime-card" data-open="clips" style="background:rgba(50,10,40,0.70);">
+        <div class="card-icon" style="background:rgba(130,20,80,0.38);">🎞</div>
         <div class="card-text">
           <div class="card-title">Clips &amp; VODs</div>
           <div class="card-sub">YouTube · Patreon</div>
@@ -520,8 +489,8 @@
         <div class="card-arrow">›</div>
       </div>
 
-      <div class="slime-card" data-open="garden" style="background:rgba(30,50,10,0.72);">
-        <div class="card-icon" style="background:rgba(60,110,20,0.4);">🌿</div>
+      <div class="slime-card" data-open="garden" style="background:rgba(30,50,10,0.70);">
+        <div class="card-icon" style="background:rgba(60,110,20,0.38);">🌿</div>
         <div class="card-text">
           <div class="card-title">Support the Garden</div>
           <div class="card-sub">Patreon membership</div>
@@ -529,16 +498,15 @@
         <div class="card-arrow">›</div>
       </div>
 
-      <div class="slime-card" data-open="about" style="background:rgba(55,40,5,0.72);">
-        <div class="card-icon" style="background:rgba(130,90,10,0.4);">🕯</div>
+      <div class="slime-card" data-open="about" style="background:rgba(55,40,5,0.70);">
+        <div class="card-icon" style="background:rgba(130,90,10,0.38);">🕯</div>
         <div class="card-text">
           <div class="card-title">About sKiDa</div>
           <div class="card-sub">the vtuber who came back</div>
         </div>
         <div class="card-arrow">›</div>
       </div>
-
-    </div><!-- /panel-home -->
+    </div>
 
     <!-- ESSAYS -->
     <div class="iframe-panel" id="panel-essays">
@@ -584,7 +552,7 @@
       </div>
     </div>
 
-    <!-- GARDEN / SUPPORT -->
+    <!-- GARDEN -->
     <div class="iframe-panel" id="panel-garden">
       <div class="iframe-header">
         <button class="back-btn">‹ Back</button>
@@ -606,8 +574,8 @@
       </div>
     </div>
 
-  </div><!-- /panels -->
-</div><!-- /dashboard -->
+  </div>
+</div>
 
 <script>
   const landing   = document.getElementById('landing');
@@ -621,7 +589,6 @@
   audio.volume = 0.06;
   let muted = false;
 
-  // ── Enter ──
   enterBtn.addEventListener('click', () => {
     audio.play().catch(() => {});
     landing.classList.add('fade-out');
@@ -635,14 +602,12 @@
     }, 1400);
   });
 
-  // ── Volume toggle ──
   volBtn.addEventListener('click', () => {
     muted = !muted;
     audio.muted = muted;
     volBtn.textContent = muted ? '🔇' : '🔊';
   });
 
-  // ── Tab nav ──
   function showTab(id) {
     document.querySelectorAll('.cards-panel, .iframe-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -656,12 +621,10 @@
     btn.addEventListener('click', () => showTab(btn.dataset.tab));
   });
 
-  // cards → iframe panels
   document.querySelectorAll('[data-open]').forEach(card => {
     card.addEventListener('click', () => showTab(card.dataset.open));
   });
 
-  // back buttons
   document.querySelectorAll('.back-btn').forEach(btn => {
     btn.addEventListener('click', () => showTab('home'));
   });
