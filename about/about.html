@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>sKiDa · About</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=IM+Fell+English:ital@0;1&family=Lato:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #060c09;
+      --gold:      rgba(255,180,60,1);
+      --gold-dim:  rgba(255,180,60,0.15);
+      --gold-glow: rgba(255,180,60,0.35);
+      --ember:     rgba(180,80,0,0.3);
+      --glass:     rgba(8,18,12,0.75);
+      --border:    rgba(255,255,255,0.07);
+      --text:      rgba(255,255,255,0.88);
+      --muted:     rgba(255,255,255,0.38);
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg);
+      font-family: 'Lato', sans-serif;
+      overflow: hidden; color: var(--text);
+    }
+
+    #bg {
+      position: fixed; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse at 30% 20%, #1a3a20 0%, #0a1a10 40%, #0d0a1a 70%, #1a0d08 100%);
+    }
+    #bg::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 65% 75%, var(--ember) 0%, transparent 55%);
+    }
+    #bg::after {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 25% 50%, rgba(0,120,80,0.18) 0%, transparent 60%);
+    }
+
+    /* subtle particle field */
+    #particles {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden;
+    }
+    .particle {
+      position: absolute; border-radius: 50%;
+      background: rgba(255,180,60,0.12);
+      animation: float linear infinite;
+    }
+    @keyframes float {
+      from { transform: translateY(100vh) scale(0); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 0.6; }
+      to   { transform: translateY(-20px) scale(1); opacity: 0; }
+    }
+
+    #root {
+      position: fixed; inset: 0; z-index: 10;
+      display: flex; flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    #header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 20px 10px; flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      background: rgba(6,12,9,0.6);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    }
+    #back-btn {
+      background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.09);
+      color: var(--muted); font-family: 'Lato', sans-serif;
+      font-size: 9px; letter-spacing: 1.6px; text-transform: uppercase;
+      padding: 4px 12px; border-radius: 20px; cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    #back-btn:hover { background: rgba(255,255,255,0.09); color: #fff; }
+    #header-title {
+      font-family: 'Cinzel', serif; font-size: clamp(14px, 3vw, 20px);
+      font-weight: 600; letter-spacing: 4px; color: #fff;
+      text-shadow: 0 0 22px var(--gold-glow); flex: 1;
+    }
+
+    /* ── BODY ── */
+    #body {
+      flex: 1; overflow-y: auto; display: flex;
+      flex-direction: column; align-items: center;
+      justify-content: center; padding: 32px 24px 40px;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.05) transparent;
+    }
+
+    /* ── NAME SIGIL ── */
+    #sigil-wrap {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 10px; margin-bottom: 40px;
+      animation: fadeUp 1.2s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    #sigil-name {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(38px, 12vw, 72px);
+      font-weight: 600; letter-spacing: 10px; color: #fff;
+      text-shadow: 0 0 40px rgba(255,180,60,0.3), 0 0 80px rgba(255,180,60,0.12);
+      animation: namebreathe 4s ease-in-out infinite;
+    }
+    @keyframes namebreathe {
+      0%,100% { text-shadow: 0 0 40px rgba(255,180,60,0.25), 0 0 80px rgba(255,180,60,0.08); }
+      50%      { text-shadow: 0 0 60px rgba(255,180,60,0.45), 0 0 120px rgba(255,180,60,0.18); }
+    }
+
+    #sigil-rule {
+      width: 120px; height: 1px;
+      background: linear-gradient(to right, transparent, rgba(255,180,60,0.4), transparent);
+    }
+
+    #sigil-sub {
+      font-size: 10px; letter-spacing: 5px; text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+    }
+
+    /* ── CONTENT AREA ── */
+    #content-area {
+      width: min(100%, 560px);
+      animation: fadeUp 1.2s ease 0.3s both;
+    }
+
+    /* placeholder state — shown until you add content */
+    #placeholder {
+      text-align: center; padding: 40px 20px;
+      border: 1px dashed rgba(255,255,255,0.08);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.015);
+    }
+    #placeholder .ph-glyph { font-size: 28px; opacity: 0.2; margin-bottom: 14px; }
+    #placeholder .ph-text {
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      color: rgba(255,255,255,0.15); line-height: 1.8;
+    }
+
+    /* ── LINKS ROW ── */
+    #links-row {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      justify-content: center; margin-top: 32px;
+      animation: fadeUp 1.2s ease 0.6s both;
+    }
+
+    .social-link {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 20px; padding: 8px 16px;
+      color: var(--muted); text-decoration: none;
+      font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+      transition: all 0.2s; backdrop-filter: blur(12px);
+    }
+    .social-link:hover {
+      border-color: rgba(255,180,60,0.25);
+      color: rgba(255,210,120,0.85);
+      background: var(--gold-dim);
+    }
+    .social-link svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* ── CONTENT (populated when you fill it in) ── */
+    #about-content {
+      font-family: 'IM Fell English', serif;
+      font-size: clamp(14px, 2vw, 16px);
+      color: rgba(255,255,255,0.65); line-height: 1.9;
+      display: none; /* shown when placeholder is removed */
+    }
+    #about-content p { margin-bottom: 1.4em; }
+    #about-content em { color: rgba(255,210,120,0.75); }
+  </style>
+</head>
+<body>
+<div id="bg"></div>
+
+<!-- ambient particles -->
+<div id="particles"></div>
+
+<div id="root">
+  <div id="header">
+    <button id="back-btn" onclick="window.parent.postMessage({type:'skida-nav',tab:'home'},'*')">‹ Back</button>
+    <div id="header-title">About sKiDa</div>
+  </div>
+
+  <div id="body">
+    <div id="sigil-wrap">
+      <div id="sigil-name">sKiDa</div>
+      <div id="sigil-rule"></div>
+      <div id="sigil-sub">the vtuber who came back</div>
+    </div>
+
+    <div id="content-area">
+
+      <!-- PLACEHOLDER — remove this div and uncomment #about-content when ready -->
+      <div id="placeholder">
+        <div class="ph-glyph">🕯</div>
+        <div class="ph-text">
+          This page is waiting.<br>
+          The story will be written when it's ready.
+        </div>
+      </div>
+
+      <!-- YOUR CONTENT — uncomment and fill in when ready
+      <div id="about-content" style="display:block">
+        <p>Write your about text here.</p>
+      </div>
+      -->
+
+    </div>
+
+    <div id="links-row">
+      <a class="social-link" href="https://twitch.tv/sKiDaGgAbAtEe" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+        Twitch
+      </a>
+      <a class="social-link" href="https://www.patreon.com/sKiDaGgAbAtEe" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.82 2.41c3.96 0 7.18 3.24 7.18 7.21 0 3.96-3.22 7.18-7.18 7.18-3.97 0-7.21-3.22-7.21-7.18 0-3.97 3.24-7.21 7.21-7.21M2 21.6h3.5V2.41H2V21.6z"/></svg>
+        Patreon
+      </a>
+      <a class="social-link" href="https://buymeacoffee.com/skidaggabatee" target="_blank" rel="noopener">
+        ☕ Buy Me a Coffee
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+// Ambient particles
+const container = document.getElementById('particles');
+for (let i = 0; i < 18; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  const size = Math.random() * 4 + 2;
+  p.style.cssText = `
+    width: ${size}px; height: ${size}px;
+    left: ${Math.random() * 100}%;
+    animation-duration: ${Math.random() * 12 + 8}s;
+    animation-delay: ${Math.random() * 10}s;
+    opacity: ${Math.random() * 0.4 + 0.1};
+  `;
+  container.appendChild(p);
+}
+</script>
+</body>
+</html>
