@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>sKiDa · Clips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #060c09;
+      --gold:      rgba(255,180,60,1);
+      --gold-dim:  rgba(255,180,60,0.15);
+      --gold-glow: rgba(255,180,60,0.35);
+      --ember:     rgba(180,80,0,0.3);
+      --glass:     rgba(8,18,12,0.75);
+      --border:    rgba(255,255,255,0.07);
+      --text:      rgba(255,255,255,0.88);
+      --muted:     rgba(255,255,255,0.38);
+      --scroll:    rgba(255,255,255,0.06);
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg);
+      font-family: 'Lato', sans-serif;
+      overflow: hidden; color: var(--text);
+    }
+
+    #bg {
+      position: fixed; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse at 30% 20%, #1a3a20 0%, #0a1a10 40%, #0d0a1a 70%, #1a0d08 100%);
+    }
+    #bg::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 65% 75%, var(--ember) 0%, transparent 55%);
+    }
+    #bg::after {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 25% 50%, rgba(0,120,80,0.15) 0%, transparent 60%);
+    }
+
+    #root {
+      position: fixed; inset: 0; z-index: 10;
+      display: flex; flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    #header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 20px 10px; flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      background: rgba(6,12,9,0.6);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    }
+
+    #back-btn {
+      background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.09);
+      color: var(--muted); font-family: 'Lato', sans-serif;
+      font-size: 9px; letter-spacing: 1.6px; text-transform: uppercase;
+      padding: 4px 12px; border-radius: 20px; cursor: pointer;
+      transition: background 0.2s, color 0.2s; flex-shrink: 0;
+    }
+    #back-btn:hover { background: rgba(255,255,255,0.09); color: #fff; }
+
+    #header-title {
+      font-family: 'Cinzel', serif; font-size: clamp(14px, 3vw, 20px);
+      font-weight: 600; letter-spacing: 4px; color: #fff;
+      text-shadow: 0 0 22px var(--gold-glow); flex: 1;
+    }
+
+    /* sort toggle */
+    #sort-toggle {
+      display: flex; gap: 3px;
+      background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 3px; flex-shrink: 0;
+    }
+    .sort-btn {
+      background: transparent; border: none;
+      color: var(--muted); font-family: 'Lato', sans-serif;
+      font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+      padding: 4px 12px; border-radius: 16px; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .sort-btn.active {
+      background: var(--gold-dim); color: rgba(255,210,120,0.9);
+      border: 1px solid rgba(255,180,60,0.25);
+    }
+    .sort-btn:hover:not(.active) { color: rgba(255,255,255,0.6); }
+
+    #clip-count {
+      font-size: 9px; letter-spacing: 1.5px; color: var(--muted);
+      text-transform: uppercase; flex-shrink: 0;
+    }
+
+    /* ── GRID ── */
+    #grid-wrap {
+      flex: 1; overflow-y: auto; padding: 16px 20px 24px;
+      scrollbar-width: thin; scrollbar-color: var(--scroll) transparent;
+    }
+    #grid-wrap::-webkit-scrollbar { width: 3px; }
+    #grid-wrap::-webkit-scrollbar-thumb { background: var(--scroll); border-radius: 4px; }
+
+    #clips-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .clip-card {
+      border-radius: 12px; overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--glass);
+      cursor: pointer;
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+      animation: cardIn 0.4s ease both;
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    .clip-card:hover {
+      transform: translateY(-3px) scale(1.01);
+      border-color: rgba(255,180,60,0.22);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.4), 0 0 20px rgba(255,180,60,0.06);
+    }
+
+    @keyframes cardIn {
+      from { opacity:0; transform: translateY(12px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    .clip-thumb {
+      position: relative; width: 100%; aspect-ratio: 16/9;
+      background: rgba(0,0,0,0.5); overflow: hidden;
+    }
+    .clip-thumb img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      transition: transform 0.3s ease;
+    }
+    .clip-card:hover .clip-thumb img { transform: scale(1.04); }
+
+    .clip-duration {
+      position: absolute; bottom: 6px; right: 8px;
+      background: rgba(0,0,0,0.75); border-radius: 4px;
+      padding: 2px 6px; font-size: 10px; color: #fff; letter-spacing: 0.5px;
+    }
+
+    .clip-play-icon {
+      position: absolute; inset: 0; display: flex;
+      align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .clip-card:hover .clip-play-icon { opacity: 1; }
+    .clip-play-icon svg { width: 44px; height: 44px; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6)); }
+
+    .clip-info { padding: 10px 12px 12px; }
+    .clip-title {
+      font-size: 12px; font-weight: 500; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 5px;
+    }
+    .clip-meta {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .clip-views {
+      font-size: 10px; color: var(--muted); letter-spacing: 0.3px;
+    }
+    .clip-date {
+      font-size: 9.5px; color: rgba(255,255,255,0.25); letter-spacing: 0.3px;
+    }
+
+    /* ── LOADING / EMPTY ── */
+    #loading-state, #empty-state, #error-state {
+      position: absolute; inset: 0; display: flex;
+      flex-direction: column; align-items: center; justify-content: center;
+      gap: 12px;
+    }
+    .state-icon { font-size: 32px; opacity: 0.3; }
+    .state-text {
+      font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
+      color: var(--muted);
+    }
+    .loading-dots { display: flex; gap: 6px; }
+    .loading-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,180,60,0.5);
+      animation: ldot 1.2s ease-in-out infinite;
+    }
+    .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes ldot { 0%,60%,100%{opacity:0.2;transform:scale(0.7)} 30%{opacity:1;transform:scale(1)} }
+
+    /* ── OVERLAY PLAYER ── */
+    #overlay {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,0.88);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s ease;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    #overlay.open { opacity: 1; pointer-events: all; }
+
+    #overlay-inner {
+      width: min(92vw, 960px);
+      display: flex; flex-direction: column; gap: 12px;
+      transform: scale(0.96); transition: transform 0.25s ease;
+    }
+    #overlay.open #overlay-inner { transform: scale(1); }
+
+    #overlay-header {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    }
+    #overlay-title {
+      font-family: 'Cinzel', serif; font-size: clamp(13px, 2.5vw, 18px);
+      letter-spacing: 2px; color: #fff; line-height: 1.3; flex: 1;
+      text-shadow: 0 0 16px var(--gold-glow);
+    }
+    #overlay-close {
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 50%; width: 32px; height: 32px; flex-shrink: 0;
+      color: var(--muted); font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, color 0.2s;
+    }
+    #overlay-close:hover { background: rgba(255,255,255,0.14); color: #fff; }
+
+    #overlay-player {
+      width: 100%; aspect-ratio: 16/9;
+      border-radius: 12px; overflow: hidden;
+      border: 1px solid var(--border); background: #000;
+    }
+    #overlay-player iframe { width: 100%; height: 100%; border: none; display: block; }
+
+    #overlay-meta {
+      display: flex; gap: 16px; align-items: center;
+    }
+    .om-stat {
+      font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--muted);
+    }
+    .om-stat span { color: rgba(255,210,120,0.8); margin-left: 5px; }
+
+    #overlay-twitch-link {
+      margin-left: auto; background: rgba(100,65,165,0.2);
+      border: 1px solid rgba(100,65,165,0.35); border-radius: 20px;
+      color: rgba(180,150,220,0.8); text-decoration: none;
+      font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+      padding: 5px 14px; transition: all 0.2s;
+    }
+    #overlay-twitch-link:hover { background: rgba(100,65,165,0.35); color: #fff; }
+
+    @media (max-width: 600px) {
+      #clips-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+      #grid-wrap { padding: 12px 14px 20px; }
+    }
+  </style>
+</head>
+<body>
+<div id="bg"></div>
+
+<div id="root">
+  <div id="header">
+    <button id="back-btn" onclick="history.back()">‹ Back</button>
+    <div id="header-title">Clips</div>
+    <span id="clip-count"></span>
+    <div id="sort-toggle">
+      <button class="sort-btn active" data-sort="views">Most Viewed</button>
+      <button class="sort-btn" data-sort="recent">Recent</button>
+    </div>
+  </div>
+
+  <div id="grid-wrap">
+    <div id="loading-state">
+      <div class="loading-dots">
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+      </div>
+      <div class="state-text">Loading clips</div>
+    </div>
+    <div id="empty-state" style="display:none">
+      <div class="state-icon">🎞</div>
+      <div class="state-text">No clips found</div>
+    </div>
+    <div id="error-state" style="display:none">
+      <div class="state-icon">⚠</div>
+      <div class="state-text" id="error-msg">Could not load clips</div>
+    </div>
+    <div id="clips-grid"></div>
+  </div>
+</div>
+
+<!-- OVERLAY PLAYER -->
+<div id="overlay">
+  <div id="overlay-inner">
+    <div id="overlay-header">
+      <div id="overlay-title"></div>
+      <button id="overlay-close">✕</button>
+    </div>
+    <div id="overlay-player">
+      <iframe id="overlay-iframe" src="" allowfullscreen allow="autoplay"></iframe>
+    </div>
+    <div id="overlay-meta">
+      <div class="om-stat">Views<span id="om-views"></span></div>
+      <div class="om-stat">Date<span id="om-date"></span></div>
+      <div class="om-stat">Creator<span id="om-creator"></span></div>
+      <a id="overlay-twitch-link" href="#" target="_blank" rel="noopener">Watch on Twitch ↗</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'https://cocreate-production.up.railway.app';
+const PARENT   = 'skidaggabatee.github.io';
+
+let allClips  = [];
+let sortMode  = 'views';
+let currentClip = null;
+
+/* ── FETCH ── */
+async function fetchClips() {
+  try {
+    const res  = await fetch(`${API_BASE}/api/clips`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    allClips   = data.clips || [];
+    render();
+  } catch(err) {
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('error-state').style.display  = 'flex';
+    document.getElementById('error-msg').textContent       = err.message || 'Could not load clips';
+  }
+}
+
+/* ── SORT & RENDER ── */
+function sorted() {
+  const c = [...allClips];
+  if (sortMode === 'views') c.sort((a,b) => b.view_count - a.view_count);
+  else                      c.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  return c;
+}
+
+function formatViews(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000)    return (n/1000).toFixed(1) + 'K';
+  return n.toString();
+}
+
+function formatDate(iso) {
+  return new Date(iso).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+
+function formatDuration(secs) {
+  const m = Math.floor(secs / 60);
+  const s = Math.floor(secs % 60);
+  return `${m}:${s.toString().padStart(2,'0')}`;
+}
+
+function render() {
+  document.getElementById('loading-state').style.display = 'none';
+  const clips = sorted();
+  const grid  = document.getElementById('clips-grid');
+  const count = document.getElementById('clip-count');
+
+  count.textContent = `${clips.length} clips`;
+  grid.innerHTML    = '';
+
+  if (!clips.length) {
+    document.getElementById('empty-state').style.display = 'flex';
+    return;
+  }
+
+  clips.forEach((clip, i) => {
+    const card = document.createElement('div');
+    card.className = 'clip-card';
+    card.style.animationDelay = `${Math.min(i * 0.04, 0.5)}s`;
+
+    card.innerHTML = `
+      <div class="clip-thumb">
+        <img src="${clip.thumbnail_url}" alt="${clip.title}" loading="lazy" />
+        <div class="clip-duration">${formatDuration(clip.duration)}</div>
+        <div class="clip-play-icon">
+          <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="22" cy="22" r="21" fill="rgba(0,0,0,0.55)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+            <polygon points="17,13 33,22 17,31" fill="rgba(255,255,255,0.9)"/>
+          </svg>
+        </div>
+      </div>
+      <div class="clip-info">
+        <div class="clip-title">${clip.title}</div>
+        <div class="clip-meta">
+          <span class="clip-views">▶ ${formatViews(clip.view_count)} views</span>
+          <span class="clip-date">${formatDate(clip.created_at)}</span>
+        </div>
+      </div>`;
+
+    card.addEventListener('click', () => openClip(clip));
+    grid.appendChild(card);
+  });
+}
+
+/* ── OVERLAY ── */
+function openClip(clip) {
+  currentClip = clip;
+  const overlay = document.getElementById('overlay');
+  document.getElementById('overlay-title').textContent   = clip.title;
+  document.getElementById('om-views').textContent        = formatViews(clip.view_count);
+  document.getElementById('om-date').textContent         = formatDate(clip.created_at);
+  document.getElementById('om-creator').textContent      = clip.creator_name || 'Unknown';
+  document.getElementById('overlay-twitch-link').href    = clip.url;
+
+  // Twitch clip embed
+  const embedUrl = `https://clips.twitch.tv/embed?clip=${clip.id}&parent=${PARENT}&autoplay=true`;
+  document.getElementById('overlay-iframe').src = embedUrl;
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeOverlay() {
+  const overlay = document.getElementById('overlay');
+  overlay.classList.remove('open');
+  document.getElementById('overlay-iframe').src = '';
+  document.body.style.overflow = '';
+  currentClip = null;
+}
+
+document.getElementById('overlay-close').addEventListener('click', closeOverlay);
+document.getElementById('overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('overlay')) closeOverlay();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeOverlay();
+});
+
+/* ── SORT TOGGLE ── */
+document.querySelectorAll('.sort-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    sortMode = btn.dataset.sort;
+    render();
+  });
+});
+
+/* ── INIT ── */
+fetchClips();
+</script>
+</body>
+</html>
