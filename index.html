@@ -645,6 +645,13 @@
   document.querySelectorAll('.back-btn').forEach(btn => {
     btn.addEventListener('click', () => showTab('home'));
   });
+
+  // Listen for back navigation from iframe pages
+  window.addEventListener('message', e => {
+    if (e.data?.type === 'skida-nav' && e.data?.tab) {
+      showTab(e.data.tab);
+    }
+  });
 </script>
 </body>
 </html>
