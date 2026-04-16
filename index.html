@@ -209,6 +209,15 @@
     }
     #vol-btn:hover { background: rgba(255,255,255,0.09); color: #fff; }
 
+    #coffee-btn {
+      display: flex; align-items: center;
+      cursor: pointer; flex-shrink: 0;
+      opacity: 0.55; transition: opacity 0.2s, transform 0.15s;
+      text-decoration: none;
+    }
+    #coffee-btn:hover { opacity: 1; transform: scale(1.05); }
+    #coffee-btn img { height: 24px; width: auto; display: block; }
+
     /* ── COMPACT GHOST TAB NAV ── */
     #tab-nav {
       position: relative;
@@ -433,6 +442,9 @@
       <div class="tagline">find your better self</div>
     </div>
     <button id="vol-btn" title="Toggle mute">🔊</button>
+    <a id="coffee-btn" href="https://buymeacoffee.com/skidaggabatee" target="_blank" rel="noopener" title="Buy Me a Coffee">
+      <img src="/app/coffee.png" alt="Buy Me a Coffee" />
+    </a>
   </div>
 
   <div id="tab-nav">
@@ -554,7 +566,7 @@
         <span class="iframe-label">Schedule + Events</span>
       </div>
       <div class="iframe-wrap">
-        <iframe src="/app/schedule/index.html" title="Schedule" loading="lazy"></iframe>
+        <iframe src="/app/schedule/schedule.html" title="Schedule" loading="lazy"></iframe>
       </div>
     </div>
 
@@ -576,7 +588,7 @@
         <span class="iframe-label">Support the Garden</span>
       </div>
       <div class="iframe-wrap">
-        <iframe src="/app/garden/index.html" title="Support" loading="lazy"></iframe>
+        <iframe src="/app/garden/garden.html" title="Support" loading="lazy"></iframe>
       </div>
     </div>
 
@@ -587,7 +599,7 @@
         <span class="iframe-label">About sKiDa</span>
       </div>
       <div class="iframe-wrap">
-        <iframe src="/app/about/index.html" title="About sKiDa" loading="lazy"></iframe>
+        <iframe src="/app/about/about.html" title="About sKiDa" loading="lazy"></iframe>
       </div>
     </div>
 
