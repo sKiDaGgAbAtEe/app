@@ -349,7 +349,7 @@
 <div id="root">
   <!-- TOP BAR -->
   <div id="topbar">
-    <button id="back-btn" onclick="history.back()">‹ Back</button>
+    <button id="back-btn" onclick="window.parent.postMessage({type:'skida-nav',tab:'home'},'*')">‹ Back</button>
     <div id="journal-wordmark">Journal</div>
     <button id="calendar-toggle">◈ Archive</button>
   </div>
