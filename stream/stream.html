@@ -941,9 +941,10 @@ function connectReader(user, token) {
   readerWs.onerror  = () => setConnState('error');
   readerWs.onclose  = () => {
     setConnState('disconnected');
-    setTimeout(() => {
-      if (document.visibilityState !== 'hidden') connectReader(readerUser, readerToken);
-    }, 4000);
+    const hasSavedCreds = localStorage.getItem('skida_chat_user') && localStorage.getItem('skida_chat_token');
+    if (hasSavedCreds && document.visibilityState !== 'hidden') {
+      setTimeout(() => connectReader(readerUser, readerToken), 4000);
+    }
   };
 }
 
@@ -1181,7 +1182,8 @@ window.addEventListener('load', () => {
     document.getElementById('auth-token').value = savedToken;
     connectReader(savedUser, savedToken);
   } else {
-    connectReader('', ''); // anon — read-only
+    // Start anon reader to show chat — no reconnect loop
+    connectReader('', '');
   }
 });
 </script>
