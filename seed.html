@@ -253,7 +253,7 @@ async function seedBook(book) {
     text
   ].filter(Boolean).join('\n').trim();
 
-  const res  = await fetch(`${BRAIN}/memory/seed`, {
+  const res  = await fetch(`${BRAIN}/memory/add`, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify({
