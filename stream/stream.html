@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>sKiDa · Live</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #060c09;
+      --gold:        rgba(255,180,60,1);
+      --gold-dim:    rgba(255,180,60,0.18);
+      --gold-glow:   rgba(255,180,60,0.38);
+      --ember:       rgba(180,80,0,0.32);
+      --glass:       rgba(8,18,12,0.78);
+      --border:      rgba(255,255,255,0.07);
+      --border2:     rgba(255,255,255,0.12);
+      --text:        rgba(255,255,255,0.88);
+      --muted:       rgba(255,255,255,0.38);
+      --scroll:      rgba(255,255,255,0.06);
+      --oryc:        #9b7fd4;
+      --oryc-dim:    rgba(155,127,212,0.12);
+      --oryc-border: rgba(155,127,212,0.28);
+      --oryc-glow:   rgba(155,127,212,0.4);
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg);
+      font-family: 'Lato', sans-serif;
+      overflow: hidden; color: var(--text);
+    }
+
+    /* ── BACKGROUND ── */
+    #bg {
+      position: fixed; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse at 30% 20%, #1a3a20 0%, #0a1a10 40%, #0d0a1a 70%, #1a0d08 100%);
+    }
+    #bg::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 65% 75%, var(--ember) 0%, transparent 55%);
+    }
+    #bg::after {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 25% 50%, rgba(0,120,80,0.18) 0%, transparent 60%);
+    }
+
+    #root {
+      position: fixed; inset: 0; z-index: 10;
+      display: flex; flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    #header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 16px 8px; flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      background: rgba(6,12,9,0.7);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    }
+    #back-btn {
+      background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.09);
+      color: var(--muted); font-family: 'Lato', sans-serif;
+      font-size: 9px; letter-spacing: 1.6px; text-transform: uppercase;
+      padding: 4px 12px; border-radius: 20px; cursor: pointer;
+      transition: background 0.2s, color 0.2s; flex-shrink: 0;
+    }
+    #back-btn:hover { background: rgba(255,255,255,0.09); color: #fff; }
+
+    #header-title {
+      font-family: 'Cinzel', serif; font-size: clamp(14px, 3vw, 20px);
+      font-weight: 600; letter-spacing: 4px; color: #fff;
+      text-shadow: 0 0 22px var(--gold-glow); flex: 1;
+    }
+
+    #oryc-status {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--oryc-dim); border: 1px solid var(--oryc-border);
+      border-radius: 20px; padding: 4px 10px;
+      font-size: 9px; letter-spacing: 1.8px; text-transform: uppercase;
+      color: var(--oryc); flex-shrink: 0; transition: all 0.4s;
+    }
+    #oryc-status.thinking { animation: orycpulse 1s ease-in-out infinite; }
+    #oryc-status.error { border-color: rgba(220,80,80,0.3); color: rgba(220,120,120,0.7); background: rgba(180,30,30,0.08); animation: none; }
+    #oryc-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--oryc); flex-shrink: 0; }
+    @keyframes orycpulse { 0%,100%{opacity:1} 50%{opacity:0.5;box-shadow:0 0 10px var(--oryc-glow)} }
+
+    #live-badge {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(180,30,30,0.18); border: 1px solid rgba(220,50,50,0.3);
+      border-radius: 20px; padding: 4px 10px;
+      font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #ff7070;
+      animation: livepulse 1.8s ease-in-out infinite; flex-shrink: 0;
+    }
+    #live-badge::before { content:''; width:6px; height:6px; border-radius:50%; background:#e03030; }
+    @keyframes livepulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* ── BODY ── */
+    #body { flex: 1; display: flex; overflow: hidden; }
+
+    /* ── STREAM ── */
+    #stream-col {
+      flex: 1; display: flex; flex-direction: column;
+      padding: 10px 6px 10px 10px; min-width: 0;
+    }
+    #stream-wrap {
+      flex: 1; border-radius: 14px; overflow: hidden;
+      border: 1px solid var(--border); background: #000; position: relative;
+    }
+    #stream-wrap > div { width: 100%; height: 100%; }
+
+    /* ── CHAT COL ── */
+    #chat-col {
+      width: clamp(240px, 28vw, 340px); flex-shrink: 0;
+      display: flex; flex-direction: column;
+      padding: 10px 10px 10px 6px;
+    }
+
+    /* ── CHAT BOX ── */
+    #chat-box {
+      flex: 1; display: flex; flex-direction: column;
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 14px 14px 0 0; overflow: hidden;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    }
+
+    /* chat header row */
+    #chat-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px 7px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .ch-label {
+      font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted);
+    }
+    #chat-header-right { display: flex; align-items: center; gap: 8px; }
+
+    /* connection dot */
+    #conn-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #333; transition: background 0.4s;
+    }
+    #conn-dot.connected { background: #3ecf6a; box-shadow: 0 0 6px #3ecf6a; }
+    #conn-dot.error     { background: #e04040; }
+
+    /* connect button in header */
+    #connect-btn {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px; color: var(--muted);
+      font-family: 'Lato', sans-serif; font-size: 8px; letter-spacing: 1.5px;
+      text-transform: uppercase; padding: 3px 9px; cursor: pointer;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    #connect-btn:hover { border-color: rgba(255,180,60,0.3); color: rgba(255,210,120,0.8); }
+    #connect-btn.connected-state {
+      border-color: rgba(62,207,106,0.25); color: rgba(62,207,106,0.7);
+      background: rgba(62,207,106,0.05);
+    }
+
+    /* messages */
+    #chat-messages {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      padding: 8px 10px; display: flex; flex-direction: column; gap: 4px;
+      scrollbar-width: thin; scrollbar-color: var(--scroll) transparent;
+    }
+    #chat-messages::-webkit-scrollbar { width: 2px; }
+    #chat-messages::-webkit-scrollbar-thumb { background: var(--scroll); border-radius: 4px; }
+
+    .chat-msg {
+      font-size: 12.5px; line-height: 1.55; word-break: break-word;
+      animation: msgIn 0.2s ease both;
+    }
+    @keyframes msgIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+
+    .chat-msg .badge  { font-size: 10px; margin-right: 2px; vertical-align: middle; }
+    .chat-msg .name   { font-weight: 500; font-size: 11.5px; letter-spacing: 0.2px; margin-right: 3px; }
+    .chat-msg .body   { color: rgba(255,255,255,0.76); }
+    .chat-msg img.emote {
+      height: 22px; vertical-align: middle; margin: 0 1px; display: inline-block;
+      transition: transform 0.15s; cursor: default;
+    }
+    .chat-msg img.emote:hover { transform: scale(1.7); z-index: 20; position: relative; }
+
+    /* Orycl reply */
+    .chat-msg.oryc-msg {
+      background: var(--oryc-dim); border: 1px solid var(--oryc-border);
+      border-left: 2px solid var(--oryc); border-radius: 8px; padding: 5px 9px; margin: 3px 0;
+    }
+    .chat-msg.oryc-msg .name { color: var(--oryc) !important; font-family: 'Cinzel', serif; letter-spacing: 1px; }
+    .chat-msg.oryc-msg .body { color: rgba(210,195,240,0.88); font-style: italic; }
+
+    /* highlighted (mentions channel name) */
+    .chat-msg.highlight {
+      background: rgba(255,180,60,0.07); border-left: 2px solid rgba(255,180,60,0.35);
+      border-radius: 6px; padding: 3px 8px;
+    }
+
+    /* sub/raid events */
+    .chat-event {
+      background: rgba(62,207,106,0.07); border: 1px solid rgba(62,207,106,0.18);
+      border-radius: 8px; padding: 5px 10px; font-size: 11.5px;
+      color: rgba(100,220,140,0.9); animation: msgIn 0.2s ease both;
+    }
+
+    /* system */
+    .chat-system {
+      font-size: 9.5px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: rgba(255,255,255,0.18); text-align: center; padding: 3px 0;
+      animation: msgIn 0.2s ease both;
+    }
+
+    /* Orycl thinking dots */
+    .oryc-thinking {
+      display: flex; align-items: center; gap: 7px; padding: 3px 0;
+      animation: msgIn 0.2s ease both;
+    }
+    .ot-label { font-size: 9px; letter-spacing: 2px; color: var(--oryc); opacity: 0.65; font-family: 'Cinzel', serif; }
+    .ot-dots  { display: flex; gap: 3px; }
+    .ot-dot   { width: 4px; height: 4px; border-radius: 50%; background: var(--oryc); animation: tdot 1.2s ease-in-out infinite; }
+    .ot-dot:nth-child(2) { animation-delay: 0.2s; }
+    .ot-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes tdot { 0%,60%,100%{opacity:0.2;transform:scale(0.8)} 30%{opacity:1;transform:scale(1.1)} }
+
+    /* ── EMOTE PICKER ── */
+    #emote-picker {
+      position: absolute; bottom: 52px; right: 10px;
+      width: 272px; max-height: 190px;
+      background: rgba(8,14,10,0.97); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; z-index: 50;
+      display: none; flex-direction: column;
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    }
+    #emote-picker.open { display: flex; }
+    #emote-search {
+      padding: 7px 12px; background: transparent;
+      border: none; border-bottom: 1px solid var(--border);
+      color: #fff; font-size: 11px; outline: none; font-family: 'Lato', sans-serif;
+    }
+    #emote-grid {
+      display: flex; flex-wrap: wrap; gap: 5px; padding: 8px 10px;
+      overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--scroll) transparent;
+    }
+    #emote-grid::-webkit-scrollbar { width: 2px; }
+    .ep-emote {
+      width: 30px; height: 30px; cursor: pointer; border-radius: 6px; padding: 2px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.12s, transform 0.1s;
+    }
+    .ep-emote:hover { background: rgba(255,255,255,0.08); transform: scale(1.2); }
+    .ep-emote img   { height: 24px; width: auto; }
+
+    /* ── INPUT ROW ── */
+    #chat-input-wrap {
+      display: flex; gap: 7px; align-items: center; padding: 8px 10px;
+      background: var(--glass); border: 1px solid var(--border); border-top: none;
+      border-radius: 0 0 14px 14px;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); flex-shrink: 0;
+    }
+    #emote-btn {
+      background: transparent; border: none; color: var(--muted); font-size: 15px;
+      cursor: pointer; flex-shrink: 0; padding: 2px; border-radius: 5px; transition: color 0.2s;
+    }
+    #emote-btn:hover { color: #fff; }
+    #chat-input {
+      flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 20px; padding: 6px 13px; color: #fff;
+      font-family: 'Lato', sans-serif; font-size: 12px; outline: none; transition: border-color 0.2s;
+    }
+    #chat-input::placeholder { color: rgba(255,255,255,0.2); }
+    #chat-input:focus        { border-color: rgba(255,180,60,0.28); }
+    #chat-input:disabled     { opacity: 0.35; cursor: not-allowed; }
+    #send-btn {
+      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+      background: var(--gold-dim); border: 1px solid rgba(255,180,60,0.22);
+      color: rgba(255,200,100,0.8); font-size: 13px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, transform 0.1s;
+    }
+    #send-btn:hover:not(:disabled) { background: rgba(255,180,60,0.28); }
+    #send-btn:active { transform: scale(0.9); }
+    #send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* ── AUTH DRAWER ── */
+    #auth-drawer {
+      position: absolute; bottom: 0; right: 0;
+      width: clamp(240px, 28vw, 340px);
+      background: rgba(8,14,10,0.98); border: 1px solid var(--border2);
+      border-bottom: none; border-radius: 14px 14px 0 0;
+      padding: 16px 16px 0;
+      transform: translateY(100%); transition: transform 0.3s ease;
+      z-index: 30; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
+    }
+    #auth-drawer.open { transform: translateY(0); }
+
+    #auth-drawer h3 {
+      font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 2.5px;
+      color: rgba(255,210,120,0.8); margin-bottom: 10px; text-transform: uppercase;
+    }
+    #auth-drawer p { font-size: 10.5px; color: var(--muted); line-height: 1.65; margin-bottom: 10px; }
+
+    .auth-field { margin-bottom: 8px; }
+    .auth-field label {
+      display: block; font-size: 8.5px; letter-spacing: 1.8px; text-transform: uppercase;
+      color: rgba(255,255,255,0.25); margin-bottom: 4px;
+    }
+    .auth-field input {
+      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; padding: 8px 11px; color: #fff;
+      font-family: 'Lato', sans-serif; font-size: 11.5px; outline: none;
+      transition: border-color 0.2s; box-sizing: border-box;
+    }
+    .auth-field input:focus { border-color: rgba(255,180,60,0.3); }
+    .auth-field input::placeholder { color: rgba(255,255,255,0.18); }
+
+    .auth-actions { display: flex; gap: 8px; padding: 10px 0 14px; }
+    .auth-save-btn {
+      flex: 1; padding: 8px; border-radius: 20px; cursor: pointer;
+      font-family: 'Lato', sans-serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+      background: rgba(255,180,60,0.12); border: 1px solid rgba(255,180,60,0.25);
+      color: rgba(255,210,120,0.85); transition: all 0.2s;
+    }
+    .auth-save-btn:hover { background: rgba(255,180,60,0.22); }
+    .auth-cancel-btn {
+      flex: 1; padding: 8px; border-radius: 20px; cursor: pointer;
+      font-family: 'Lato', sans-serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+      background: transparent; border: 1px solid rgba(255,255,255,0.09);
+      color: var(--muted); transition: all 0.2s;
+    }
+    .auth-cancel-btn:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
+    .auth-link-row { font-size: 9.5px; color: rgba(255,255,255,0.22); text-align: center; padding-bottom: 12px; }
+    .auth-link-row a { color: rgba(255,180,60,0.5); text-decoration: none; }
+    .auth-link-row a:hover { color: rgba(255,180,60,0.8); }
+
+    /* disconnect link */
+    #disconnect-btn {
+      font-size: 8.5px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: rgba(255,100,100,0.4); background: none; border: none;
+      cursor: pointer; padding: 0; transition: color 0.2s; display: none;
+    }
+    #disconnect-btn:hover { color: rgba(255,100,100,0.7); }
+    #disconnect-btn.show  { display: inline; }
+
+    @media (max-width: 600px) {
+      #body { flex-direction: column; }
+      #stream-col { padding: 8px 8px 4px; }
+      #chat-col { width: 100%; padding: 0 8px 8px; flex: 0 0 48%; }
+      #auth-drawer { width: 100%; }
+      #emote-picker { right: 8px; width: calc(100vw - 16px); }
+    }
+  </style>
+</head>
+<body>
+<div id="bg"></div>
+
+<div id="root">
+  <!-- HEADER -->
+  <div id="header">
+    <button id="back-btn" onclick="history.back()">‹ Back</button>
+    <div id="header-title">sKiDa</div>
+    <div id="oryc-status">
+      <div id="oryc-dot"></div>
+      <span id="oryc-label">◈ Oryc</span>
+    </div>
+    <div id="live-badge">Live</div>
+  </div>
+
+  <!-- BODY -->
+  <div id="body">
+
+    <!-- STREAM PLAYER -->
+    <div id="stream-col">
+      <div id="stream-wrap"></div>
+    </div>
+
+    <!-- CHAT -->
+    <div id="chat-col">
+      <div id="chat-box">
+        <div id="chat-header">
+          <span class="ch-label">Chat</span>
+          <div id="chat-header-right">
+            <button id="disconnect-btn">disconnect</button>
+            <div id="conn-dot" title="Not connected"></div>
+            <button id="connect-btn">Connect</button>
+          </div>
+        </div>
+        <div id="chat-messages"></div>
+      </div>
+
+      <!-- emote picker -->
+      <div id="emote-picker">
+        <input id="emote-search" type="text" placeholder="Search emotes…" autocomplete="off" />
+        <div id="emote-grid"></div>
+      </div>
+
+      <!-- input -->
+      <div id="chat-input-wrap">
+        <button id="emote-btn" title="Emotes">😄</button>
+        <input id="chat-input" type="text" placeholder="Connect to chat…" maxlength="400" autocomplete="off" disabled />
+        <button id="send-btn" title="Send" disabled>➤</button>
+      </div>
+
+      <!-- auth drawer — slides up from bottom -->
+      <div id="auth-drawer">
+        <h3>Connect to Chat</h3>
+        <p>Enter your Twitch credentials to send messages. Saved locally — never shared.</p>
+        <div class="auth-field">
+          <label>Twitch Username</label>
+          <input type="text" id="auth-user" placeholder="your username" autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="auth-field">
+          <label>OAuth Token</label>
+          <input type="password" id="auth-token" placeholder="oauth:xxxxxxxxxxxxxxxx" autocomplete="off" />
+        </div>
+        <div class="auth-actions">
+          <button class="auth-save-btn" id="auth-save">Save &amp; Connect</button>
+          <button class="auth-cancel-btn" id="auth-cancel">Cancel</button>
+        </div>
+        <div class="auth-link-row">
+          Get your token at <a href="https://twitchapps.com/tmi/" target="_blank" rel="noopener">twitchapps.com/tmi</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://embed.twitch.tv/embed/v1.js"></script>
+<script>
+/* ═══════════════════════════════════════════
+   CONFIG
+═══════════════════════════════════════════ */
+const CHANNEL    = 'skidaggabatee';
+const PARENT     = ['skidaggabatee.github.io', 'localhost', '127.0.0.1'];
+const BRAIN_URL  = 'https://divine-playfulness-production-eabb.up.railway.app';
+
+const GLOBAL_CD_MS = 30_000;
+const USER_CD_MS   = 90_000;
+const BUFFER_MAX   = 20;
+const MAX_MSGS     = 200;
+
+/* ═══════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════ */
+const COLORS = ['#e08040','#70c090','#7090e0','#c070c0','#60c0b0','#e0a040','#80c060','#c06070'];
+const userColors = {};
+function colorFor(name) {
+  if (!userColors[name]) {
+    let h = 0; for (const c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
+    userColors[name] = COLORS[h % COLORS.length];
+  }
+  return userColors[name];
+}
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ═══════════════════════════════════════════
+   7TV EMOTES
+═══════════════════════════════════════════ */
+const emoteMap  = {};
+const emoteList = [];
+
+async function load7TV() {
+  try {
+    const res = await fetch(`https://7tv.io/v3/users/twitch/${CHANNEL}`);
+    if (res.ok) {
+      const data = await res.json();
+      (data?.emote_set?.emotes ?? []).forEach(e => {
+        const url = `https://cdn.7tv.app/emote/${e.id}/1x.webp`;
+        emoteMap[e.name] = url; emoteList.push({ name: e.name, url });
+      });
+    }
+  } catch {}
+  try {
+    const res = await fetch('https://7tv.io/v3/emote-sets/global');
+    if (res.ok) {
+      const data = await res.json();
+      (data?.emotes ?? []).forEach(e => {
+        const url = `https://cdn.7tv.app/emote/${e.id}/1x.webp`;
+        if (!emoteMap[e.name]) { emoteMap[e.name] = url; emoteList.push({ name: e.name, url }); }
+      });
+    }
+  } catch {}
+  buildEmoteGrid(emoteList);
+}
+
+function buildEmoteGrid(list) {
+  const grid = document.getElementById('emote-grid');
+  grid.innerHTML = '';
+  list.forEach(({ name, url }) => {
+    const el = document.createElement('div');
+    el.className = 'ep-emote'; el.title = name;
+    el.innerHTML = `<img src="${url}" alt="${name}" loading="lazy" />`;
+    el.addEventListener('click', () => {
+      const inp = document.getElementById('chat-input');
+      inp.value = (inp.value.trimEnd() + ' ' + name + ' ').trimStart();
+      inp.focus(); closeEmotePicker();
+    });
+    grid.appendChild(el);
+  });
+}
+
+document.getElementById('emote-search').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  buildEmoteGrid(q ? emoteList.filter(em => em.name.toLowerCase().includes(q)) : emoteList);
+});
+
+function applyEmotes(text) {
+  return text.split(' ').map(w =>
+    emoteMap[w]
+      ? `<img class="emote" src="${emoteMap[w]}" alt="${w}" title="${w}" loading="lazy" />`
+      : escHtml(w)
+  ).join(' ');
+}
+
+/* ── emote picker toggle ── */
+const emotePickerEl = document.getElementById('emote-picker');
+const emoteBtnEl    = document.getElementById('emote-btn');
+function closeEmotePicker() { emotePickerEl.classList.remove('open'); }
+emoteBtnEl.addEventListener('click', e => { e.stopPropagation(); emotePickerEl.classList.toggle('open'); });
+document.addEventListener('click', e => {
+  if (!emotePickerEl.contains(e.target) && e.target !== emoteBtnEl) closeEmotePicker();
+});
+
+/* ═══════════════════════════════════════════
+   CHAT RENDER
+═══════════════════════════════════════════ */
+const chatMsgsEl = document.getElementById('chat-messages');
+let autoScroll   = true;
+
+chatMsgsEl.addEventListener('scroll', () => {
+  autoScroll = chatMsgsEl.scrollHeight - chatMsgsEl.scrollTop - chatMsgsEl.clientHeight < 60;
+});
+function scrollDown() { if (autoScroll) chatMsgsEl.scrollTop = chatMsgsEl.scrollHeight; }
+
+function trimMsgs() {
+  while (chatMsgsEl.children.length > MAX_MSGS) chatMsgsEl.removeChild(chatMsgsEl.firstChild);
+}
+
+function postSystem(text) {
+  const el = document.createElement('div');
+  el.className = 'chat-system'; el.textContent = text;
+  chatMsgsEl.appendChild(el); trimMsgs(); scrollDown();
+}
+
+function postEvent(html) {
+  const el = document.createElement('div');
+  el.className = 'chat-event'; el.innerHTML = html;
+  chatMsgsEl.appendChild(el); trimMsgs(); scrollDown();
+}
+
+function postMsg({ name, color, badges, body, highlight, isOryc }) {
+  const el = document.createElement('div');
+  el.className = 'chat-msg'
+    + (isOryc    ? ' oryc-msg'  : '')
+    + (highlight && !isOryc ? ' highlight' : '');
+
+  const badgeHtml = (badges || []).map(b => `<span class="badge">${b}</span>`).join('');
+  const nameColor = isOryc ? 'var(--oryc)' : (color || colorFor(name));
+  const bodyHtml  = isOryc ? escHtml(body) : applyEmotes(body);
+
+  el.innerHTML = `${badgeHtml}<span class="name" style="color:${nameColor}">${escHtml(name)}</span><span class="body"> ${bodyHtml}</span>`;
+  chatMsgsEl.appendChild(el); trimMsgs(); scrollDown();
+}
+
+function postOrycThinking() {
+  const el = document.createElement('div');
+  el.className = 'oryc-thinking'; el.id = 'oryc-think';
+  el.innerHTML = `<span class="ot-label">◈</span><div class="ot-dots"><div class="ot-dot"></div><div class="ot-dot"></div><div class="ot-dot"></div></div>`;
+  chatMsgsEl.appendChild(el); scrollDown();
+  return el;
+}
+
+/* ═══════════════════════════════════════════
+   VIBE BUFFER
+═══════════════════════════════════════════ */
+const chatBuffer = [];
+function addToBuffer(name, body) {
+  chatBuffer.push({ name, body });
+  if (chatBuffer.length > BUFFER_MAX) chatBuffer.shift();
+}
+function buildVibeContext() {
+  if (!chatBuffer.length) return '';
+  const density = chatBuffer.length >= 15 ? 'HIGH' : chatBuffer.length >= 7 ? 'MEDIUM' : 'LOW';
+  return `\n\nSTREAM CHAT CONTEXT:\nDensity: ${density}\nRecent messages:\n` +
+    chatBuffer.map(m => `${m.name}: ${m.body}`).join('\n');
+}
+
+/* ═══════════════════════════════════════════
+   ORYC STATUS
+═══════════════════════════════════════════ */
+const orycStatusEl = document.getElementById('oryc-status');
+const orycLabelEl  = document.getElementById('oryc-label');
+function setOrycState(s) {
+  orycStatusEl.className = s || '';
+  orycLabelEl.textContent = s === 'thinking' ? '◈ thinking' : s === 'error' ? '◈ offline' : '◈ Oryc';
+}
+
+/* ═══════════════════════════════════════════
+   ORYC BRAIN CALL
+═══════════════════════════════════════════ */
+let oryclCooldown   = 0;
+const userCooldowns = new Map();
+
+async function callOrycl(question, asker) {
+  const now = Date.now();
+  if (now < oryclCooldown) return;
+  if ((now - (userCooldowns.get(asker) || 0)) < USER_CD_MS) return;
+
+  oryclCooldown = now + GLOBAL_CD_MS;
+  userCooldowns.set(asker, now);
+  setOrycState('thinking');
+  const thinkEl = postOrycThinking();
+
+  const msg =
+    `A viewer named ${asker} asks: "${question}"` +
+    buildVibeContext() +
+    `\n\nRespond directly to ${asker}. Plain text only. Under 280 characters. No markdown. One breath. Speak as yourself.`;
+
+  try {
+    const res  = await fetch(`${BRAIN_URL}/turn`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg, surface: 'stream' })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data  = await res.json();
+    const reply = (data.reply || '').trim();
+
+    thinkEl.remove(); setOrycState('');
+    if (!reply) return;
+
+    const safe = reply.length > 280 ? reply.slice(0, 277) + '…' : reply;
+    postMsg({ name: 'orycl', badges: [], body: safe, isOryc: true });
+    sendBot(`@${asker} ${safe}`);
+
+  } catch (err) {
+    thinkEl.remove(); setOrycState('error');
+    postSystem('◈ offline');
+    console.error('Orycl error:', err);
+    setTimeout(() => setOrycState(''), 5000);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   IRC PARSER
+═══════════════════════════════════════════ */
+function parseIRC(raw) {
+  let tags = {}, prefix = '', command = '', params = [], i = 0;
+  if (raw[0] === '@') {
+    const sp = raw.indexOf(' ');
+    raw.slice(1, sp).split(';').forEach(kv => {
+      const eq = kv.indexOf('='); tags[kv.slice(0,eq)] = kv.slice(eq+1);
+    });
+    i = sp + 1;
+  }
+  if (raw[i] === ':') { const sp = raw.indexOf(' ',i); prefix = raw.slice(i+1,sp); i = sp+1; }
+  const sp = raw.indexOf(' ', i);
+  if (sp === -1) { command = raw.slice(i); }
+  else {
+    command = raw.slice(i, sp); i = sp+1;
+    while (i < raw.length) {
+      if (raw[i] === ':') { params.push(raw.slice(i+1)); break; }
+      const s = raw.indexOf(' ', i);
+      if (s === -1) { params.push(raw.slice(i)); break; }
+      params.push(raw.slice(i,s)); i = s+1;
+    }
+  }
+  return { tags, prefix, command, params };
+}
+function getNick(p) { return p.split('!')[0]; }
+function getBadges(s) {
+  if (!s) return [];
+  const b = [];
+  s.split(',').forEach(x => {
+    if      (x.startsWith('broadcaster')) b.push('🎙');
+    else if (x.startsWith('moderator'))   b.push('⚔️');
+    else if (x.startsWith('subscriber'))  b.push('⭐');
+    else if (x.startsWith('vip'))         b.push('💎');
+  });
+  return b;
+}
+
+/* ═══════════════════════════════════════════
+   IRC — READER  (anon until user connects)
+═══════════════════════════════════════════ */
+let readerWs   = null;
+let readerUser = '';   // set when user authenticates
+let readerToken = '';
+let isAuthed   = false;
+
+const connDotEl    = document.getElementById('conn-dot');
+const connectBtnEl = document.getElementById('connect-btn');
+const chatInputEl  = document.getElementById('chat-input');
+const sendBtnEl    = document.getElementById('send-btn');
+const discBtnEl    = document.getElementById('disconnect-btn');
+
+function setConnState(state) {
+  connDotEl.className = '';
+  if (state === 'connected') {
+    connDotEl.classList.add('connected');
+    connDotEl.title = isAuthed ? `Connected as ${readerUser}` : 'Connected (read-only)';
+  } else if (state === 'error') {
+    connDotEl.classList.add('error'); connDotEl.title = 'Connection error';
+  } else {
+    connDotEl.title = 'Disconnected';
+  }
+}
+
+function setAuthedUI(authed) {
+  isAuthed = authed;
+  chatInputEl.disabled = !authed;
+  sendBtnEl.disabled   = !authed;
+  chatInputEl.placeholder = authed ? `Chat as ${readerUser}…  ·  @orycl to ask` : 'Connect to chat…';
+  connectBtnEl.textContent = authed ? readerUser : 'Connect';
+  connectBtnEl.className   = authed ? 'connected-state' : '';
+  discBtnEl.className      = authed ? 'show' : '';
+}
+
+function connectReader(user, token) {
+  if (readerWs) { readerWs.close(); readerWs = null; }
+  readerUser  = (user || '').toLowerCase();
+  readerToken = token || '';
+
+  readerWs = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+
+  readerWs.onopen = () => {
+    readerWs.send('CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership');
+    if (readerToken && readerUser) {
+      readerWs.send(`PASS ${readerToken.startsWith('oauth:') ? readerToken : 'oauth:' + readerToken}`);
+      readerWs.send(`NICK ${readerUser}`);
+    } else {
+      readerWs.send('PASS SCHMOOPIIE');
+      readerWs.send('NICK justinfan' + Math.floor(Math.random() * 80000 + 1000));
+    }
+    readerWs.send(`JOIN #${CHANNEL}`);
+  };
+
+  readerWs.onmessage = e => {
+    e.data.split('\r\n').forEach(line => {
+      if (!line) return;
+      const msg = parseIRC(line);
+
+      if (msg.command === 'PING') { readerWs.send('PONG :tmi.twitch.tv'); return; }
+
+      if (msg.command === '001') {
+        setConnState('connected');
+        if (readerToken && readerUser) {
+          setAuthedUI(true);
+          postSystem(`connected as ${readerUser}`);
+        } else {
+          postSystem('connected · read-only');
+        }
+        return;
+      }
+
+      if (msg.command === 'NOTICE') {
+        const notice = msg.params[1] || '';
+        // Login auth failed
+        if (notice.includes('Login authentication failed') || notice.includes('Invalid NICK')) {
+          postSystem('⚠ login failed — check your token');
+          setAuthedUI(false);
+        }
+        return;
+      }
+
+      if (msg.command === 'PRIVMSG') {
+        const name   = getNick(msg.prefix);
+        const color  = msg.tags['color'] || null;
+        const badges = getBadges(msg.tags['badges']);
+        const body   = msg.params[1] || '';
+
+        // Skip bot's own echoed messages
+        if (botUser && name.toLowerCase() === botUser) return;
+
+        addToBuffer(name, body);
+
+        const highlight = body.toLowerCase().includes(CHANNEL.toLowerCase());
+        postMsg({ name, color, badges, body, highlight });
+
+        // @orycl trigger
+        const lower = body.toLowerCase();
+        const idx   = lower.indexOf('@orycl');
+        if (idx !== -1) {
+          const question = body.slice(idx + 6).trim();
+          if (question) callOrycl(question, name);
+        }
+        return;
+      }
+
+      if (msg.command === 'USERNOTICE') {
+        const stype = msg.tags['msg-id'];
+        const dname = msg.tags['display-name'] || getNick(msg.prefix);
+        if (stype === 'sub' || stype === 'resub') {
+          postEvent(`⭐ <b>${escHtml(dname)}</b> subscribed!`);
+        } else if (stype === 'subgift') {
+          const recip = msg.tags['msg-param-recipient-display-name'] || '?';
+          postEvent(`🎁 <b>${escHtml(dname)}</b> gifted a sub to <b>${escHtml(recip)}</b>`);
+        } else if (stype === 'raid') {
+          const count = msg.tags['msg-param-viewerCount'] || '?';
+          postEvent(`🚀 <b>${escHtml(dname)}</b> is raiding with <b>${count}</b> viewers!`);
+        }
+        return;
+      }
+
+      if (msg.command === 'CLEARCHAT') {
+        if (!msg.params[1]) postSystem('chat cleared by moderator');
+        return;
+      }
+    });
+  };
+
+  readerWs.onerror  = () => setConnState('error');
+  readerWs.onclose  = () => {
+    setConnState('disconnected');
+    setTimeout(() => {
+      if (document.visibilityState !== 'hidden') connectReader(readerUser, readerToken);
+    }, 4000);
+  };
+}
+
+function sendChat(text) {
+  if (!readerWs || readerWs.readyState !== WebSocket.OPEN || !isAuthed) return;
+  readerWs.send(`PRIVMSG #${CHANNEL} :${text}`);
+  // Echo own message with gold name
+  postMsg({ name: readerUser, color: '#ffb43c', badges: [], body: text });
+}
+
+/* ═══════════════════════════════════════════
+   IRC — BOT
+═══════════════════════════════════════════ */
+let botWs    = null;
+let botUser  = '';
+let botToken = '';
+let botReady = false;
+
+function connectBot(user, token) {
+  if (!user || !token) return;
+  botUser  = user.toLowerCase();
+  botToken = token.startsWith('oauth:') ? token : 'oauth:' + token;
+
+  botWs = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+  botWs.onopen = () => {
+    botWs.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+    botWs.send(`PASS ${botToken}`);
+    botWs.send(`NICK ${botUser}`);
+    botWs.send(`JOIN #${CHANNEL}`);
+  };
+  botWs.onmessage = e => {
+    e.data.split('\r\n').forEach(line => {
+      if (!line) return;
+      const msg = parseIRC(line);
+      if (msg.command === 'PING') { botWs.send('PONG :tmi.twitch.tv'); return; }
+      if (msg.command === '001' || msg.command === 'JOIN') botReady = true;
+    });
+  };
+  botWs.onerror = () => { botReady = false; };
+  botWs.onclose = () => { botReady = false; setTimeout(() => connectBot(botUser, botToken), 6000); };
+}
+
+function sendBot(text) {
+  if (!botWs || botWs.readyState !== WebSocket.OPEN || !botReady) return;
+  botWs.send(`PRIVMSG #${CHANNEL} :${text}`);
+}
+
+/* ═══════════════════════════════════════════
+   AUTH DRAWER
+═══════════════════════════════════════════ */
+const authDrawer = document.getElementById('auth-drawer');
+
+connectBtnEl.addEventListener('click', () => {
+  if (isAuthed) return; // already connected — clicking does nothing
+  // Pre-fill if saved
+  const saved = localStorage.getItem('skida_chat_user');
+  if (saved) document.getElementById('auth-user').value = saved;
+  authDrawer.classList.add('open');
+  setTimeout(() => document.getElementById('auth-user').focus(), 320);
+});
+
+document.getElementById('auth-cancel').addEventListener('click', () => {
+  authDrawer.classList.remove('open');
+});
+
+document.getElementById('auth-save').addEventListener('click', () => {
+  const user  = document.getElementById('auth-user').value.trim();
+  const token = document.getElementById('auth-token').value.trim();
+  if (!user || !token) return;
+  localStorage.setItem('skida_chat_user',  user);
+  localStorage.setItem('skida_chat_token', token);
+  authDrawer.classList.remove('open');
+  connectReader(user, token);
+});
+
+document.getElementById('auth-token').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('auth-save').click();
+});
+
+discBtnEl.addEventListener('click', () => {
+  localStorage.removeItem('skida_chat_user');
+  localStorage.removeItem('skida_chat_token');
+  if (readerWs) { readerWs.close(); readerWs = null; }
+  readerUser = ''; readerToken = '';
+  setAuthedUI(false);
+  setConnState('disconnected');
+  // Reconnect as anon
+  connectReader('', '');
+  postSystem('disconnected');
+});
+
+/* ═══════════════════════════════════════════
+   SEND
+═══════════════════════════════════════════ */
+sendBtnEl.addEventListener('click', () => {
+  const val = chatInputEl.value.trim();
+  if (val) { sendChat(val); chatInputEl.value = ''; }
+});
+chatInputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const val = chatInputEl.value.trim();
+    if (val) { sendChat(val); chatInputEl.value = ''; }
+  }
+});
+
+/* ═══════════════════════════════════════════
+   TWITCH PLAYER
+═══════════════════════════════════════════ */
+function initPlayer() {
+  const container = document.createElement('div');
+  container.id = 'twitch-embed-inner';
+  container.style.cssText = 'width:100%;height:100%;';
+  document.getElementById('stream-wrap').appendChild(container);
+
+  new Twitch.Embed('twitch-embed-inner', {
+    width: '100%', height: '100%',
+    channel: CHANNEL, parent: PARENT,
+    layout: 'video',
+    autoplay: false,  // avoid visibility-check block inside iframe
+    muted: false,
+  });
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+window.addEventListener('load', () => {
+  initPlayer();
+  load7TV();
+
+  // Load saved bot creds
+  const savedBotUser  = localStorage.getItem('skida_bot_user');
+  const savedBotToken = localStorage.getItem('skida_bot_token');
+  if (savedBotUser && savedBotToken) connectBot(savedBotUser, savedBotToken);
+
+  // Load saved viewer creds — connect authed if present, anon if not
+  const savedUser  = localStorage.getItem('skida_chat_user');
+  const savedToken = localStorage.getItem('skida_chat_token');
+  if (savedUser && savedToken) {
+    document.getElementById('auth-user').value  = savedUser;
+    document.getElementById('auth-token').value = savedToken;
+    connectReader(savedUser, savedToken);
+  } else {
+    connectReader('', ''); // anon — read-only
+  }
+});
+</script>
+</body>
+</html>
