@@ -923,18 +923,24 @@ function connectReader(user, token) {
         const body   = msg.params[1] || '';
 
         // Skip bot's own echoed messages
-        if (botUser && name.toLowerCase() === botUser) return;
+        if (botUser && (name.toLowerCase() === botUser || name.toLowerCase() === '0rycl' || name.toLowerCase() === 'orycl')) return;
 
         addToBuffer(name, body);
 
         const highlight = body.toLowerCase().includes(CHANNEL.toLowerCase());
         postMsg({ name, color, badges, body, highlight });
 
-        // @orycl trigger
+        // @orycl / @0rycl trigger — both spellings
         const lower = body.toLowerCase();
-        const idx   = lower.indexOf('@orycl');
-        if (idx !== -1) {
-          const question = body.slice(idx + 6).trim();
+        const triggerIdx = lower.indexOf('@orycl') !== -1 ? lower.indexOf('@orycl')
+                         : lower.indexOf('@0rycl') !== -1 ? lower.indexOf('@0rycl')
+                         : -1;
+        if (triggerIdx !== -1) {
+          // figure out how many chars the trigger word is
+          const triggerLen = lower.slice(triggerIdx, triggerIdx + 7).startsWith('@orycl') ? 6
+                           : lower.slice(triggerIdx, triggerIdx + 7).startsWith('@0rycl') ? 6
+                           : 6;
+          const question = body.slice(triggerIdx + triggerLen).trim();
           if (question) callOrycl(question, name);
         }
         return;
