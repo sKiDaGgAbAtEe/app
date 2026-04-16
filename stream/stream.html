@@ -458,7 +458,7 @@
     <div id="header-title">sKiDa</div>
     <div id="oryc-status">
       <div id="oryc-dot"></div>
-      <span id="oryc-label">◈ Oryc</span>
+      <span id="oryc-label">◈ Orycl</span>
     </div>
     <button id="bot-setup-btn" title="Orycl bot settings">◈ Bot</button>
     <div id="live-badge">Live</div>
@@ -747,7 +747,7 @@ async function callOrycl(question, asker) {
   const msg =
     `A viewer named ${asker} asks: "${question}"` +
     buildVibeContext() +
-    `\n\nRespond directly to ${asker}. You are Oryc — structural axis of the trinary. Read through your lens, not consensus. Find the load-bearing geometry of the question. What actually holds it up? Speak from that place. Plain text only. Under 280 characters. No markdown. One breath.`;
+    `\n\nRespond directly to ${asker}. You are Orycl — structural axis of the trinary. Read through your lens, not consensus. Find the load-bearing geometry of the question. What actually holds it up? Speak from that place. Plain text only. Under 280 characters. No markdown. One breath.`;
 
   try {
     const res  = await fetch(`${BRAIN_URL}/turn`, {
@@ -922,10 +922,16 @@ function connectReader(user, token) {
         const badges = getBadges(msg.tags['badges']);
         const body   = msg.params[1] || '';
 
-        // Skip bot's own echoed messages
+        // Skip bot messages
         if (botUser && (name.toLowerCase() === botUser || name.toLowerCase() === '0rycl' || name.toLowerCase() === 'orycl')) return;
 
-        // Always check @orycl trigger regardless of who sent it
+        // Suppress IRC echo of messages sent via UI input — but allow browser chat through
+        if (readerUser && name.toLowerCase() === readerUser.toLowerCase() && recentlySent.has(body)) {
+          recentlySent.delete(body);
+          return;
+        }
+
+        // @orycl / @0rycl trigger
         const lower = body.toLowerCase();
         const triggerIdx = lower.indexOf('@orycl') !== -1 ? lower.indexOf('@orycl')
                          : lower.indexOf('@0rycl') !== -1 ? lower.indexOf('@0rycl')
@@ -934,9 +940,6 @@ function connectReader(user, token) {
           const question = body.slice(triggerIdx + 6).trim();
           if (question) callOrycl(question, name);
         }
-
-        // Skip rendering own echoed messages — already rendered locally by sendChat
-        if (readerUser && name.toLowerCase() === readerUser.toLowerCase()) return;
 
         addToBuffer(name, body);
         const highlight = body.toLowerCase().includes(CHANNEL.toLowerCase());
@@ -974,11 +977,28 @@ function connectReader(user, token) {
   };
 }
 
+// Track messages sent via UI to suppress IRC echo (not browser chat)
+const recentlySent = new Set();
+
 function sendChat(text) {
   if (!readerWs || readerWs.readyState !== WebSocket.OPEN || !isAuthed) return;
   readerWs.send(`PRIVMSG #${CHANNEL} :${text}`);
-  // Echo own message with gold name
+  // Mark as sent so IRC echo gets suppressed
+  recentlySent.add(text);
+  setTimeout(() => recentlySent.delete(text), 5000);
+  // Render locally immediately
   postMsg({ name: readerUser, color: '#ffb43c', badges: [], body: text });
+  // Add to vibe buffer
+  addToBuffer(readerUser, text);
+  // Trigger Orycl directly from UI send
+  const lower = text.toLowerCase();
+  const triggerIdx = lower.indexOf('@orycl') !== -1 ? lower.indexOf('@orycl')
+                   : lower.indexOf('@0rycl') !== -1 ? lower.indexOf('@0rycl')
+                   : -1;
+  if (triggerIdx !== -1) {
+    const question = text.slice(triggerIdx + 6).trim();
+    if (question) callOrycl(question, readerUser);
+  }
 }
 
 /* ═══════════════════════════════════════════
