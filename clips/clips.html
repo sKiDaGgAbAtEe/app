@@ -262,7 +262,7 @@
 
 <div id="root">
   <div id="header">
-    <button id="back-btn" onclick="history.back()">‹ Back</button>
+    <button id="back-btn" onclick="window.parent.postMessage({type:'skida-nav',tab:'home'},'*')">‹ Back</button>
     <div id="header-title">Clips</div>
     <span id="clip-count"></span>
     <div id="sort-toggle">
