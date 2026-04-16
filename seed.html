@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orycl Library Seeder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Share+Tech+Mono&family=Lato:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0f0c; --gold: rgba(255,180,60,0.9); --gold-dim: rgba(255,180,60,0.12);
+      --oryc: #9b7fd4; --oryc-dim: rgba(155,127,212,0.12); --oryc-border: rgba(155,127,212,0.28);
+      --green: #3ecf6a; --red: #e04040;
+      --border: rgba(255,255,255,0.07); --glass: rgba(8,18,12,0.8);
+      --text: rgba(255,255,255,0.88); --muted: rgba(255,255,255,0.38);
+      --mono: 'Share Tech Mono', monospace;
+    }
+    html, body { width:100%; min-height:100%; background:var(--bg); color:var(--text); font-family:'Lato',sans-serif; }
+    body { padding: 32px 24px 48px; }
+
+    #header { text-align:center; margin-bottom: 32px; }
+    #header h1 { font-family:'Cinzel',serif; font-size:22px; letter-spacing:5px; color:#fff; text-shadow:0 0 24px rgba(155,127,212,0.5); margin-bottom:6px; }
+    #header p  { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
+
+    #main { max-width: 720px; margin: 0 auto; display:flex; flex-direction:column; gap:16px; }
+
+    .card {
+      background:var(--glass); border:1px solid var(--border); border-radius:14px; padding:20px 22px;
+      backdrop-filter:blur(16px);
+    }
+    .card-title { font-size:9px; letter-spacing:2.5px; text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
+
+    /* status bar */
+    #status-bar {
+      display:flex; align-items:center; gap:10px;
+    }
+    #status-dot { width:8px; height:8px; border-radius:50%; background:#444; flex-shrink:0; transition:background 0.3s; }
+    #status-dot.ready   { background:var(--green); box-shadow:0 0 8px var(--green); }
+    #status-dot.running { background:var(--gold); animation:pulse 1s ease-in-out infinite; }
+    #status-dot.done    { background:var(--oryc); box-shadow:0 0 8px var(--oryc); }
+    #status-dot.error   { background:var(--red); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    #status-text { font-family:var(--mono); font-size:12px; color:var(--text); flex:1; }
+
+    /* progress */
+    #progress-wrap { margin-top:12px; display:none; }
+    #progress-bar-bg { height:4px; background:rgba(255,255,255,0.07); border-radius:2px; overflow:hidden; margin-bottom:6px; }
+    #progress-bar-fill { height:100%; background:var(--oryc); border-radius:2px; transition:width 0.3s; width:0%; }
+    #progress-label { font-family:var(--mono); font-size:10px; color:var(--muted); }
+
+    /* controls */
+    #controls { display:flex; gap:10px; flex-wrap:wrap; }
+    .btn {
+      padding:10px 22px; border-radius:24px; cursor:pointer;
+      font-family:'Lato',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase;
+      transition:all 0.2s; border:1px solid;
+    }
+    .btn-primary {
+      background:var(--oryc-dim); border-color:var(--oryc-border); color:rgba(200,180,240,0.9);
+    }
+    .btn-primary:hover { background:rgba(155,127,212,0.22); }
+    .btn-primary:disabled { opacity:0.3; cursor:not-allowed; }
+    .btn-ghost {
+      background:transparent; border-color:var(--border); color:var(--muted);
+    }
+    .btn-ghost:hover { border-color:rgba(255,255,255,0.2); color:#fff; }
+    .btn-danger {
+      background:rgba(220,60,60,0.08); border-color:rgba(220,60,60,0.2); color:rgba(220,120,120,0.7);
+    }
+    .btn-danger:hover { background:rgba(220,60,60,0.18); color:rgba(255,150,150,0.9); }
+
+    /* stats */
+    #stats-row { display:flex; gap:20px; flex-wrap:wrap; }
+    .stat { display:flex; flex-direction:column; gap:3px; }
+    .stat-val { font-family:var(--mono); font-size:18px; color:var(--oryc); }
+    .stat-label { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); }
+
+    /* log */
+    #log {
+      height:260px; overflow-y:auto; font-family:var(--mono); font-size:11px; line-height:1.7;
+      background:rgba(0,0,0,0.3); border-radius:8px; padding:12px 14px;
+      scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.06) transparent;
+    }
+    #log::-webkit-scrollbar { width:2px; }
+    .log-ok   { color:rgba(62,207,106,0.8); }
+    .log-skip { color:rgba(255,255,255,0.25); }
+    .log-err  { color:rgba(220,80,80,0.8); }
+    .log-info { color:rgba(255,180,60,0.7); }
+    .log-head { color:var(--oryc); font-weight:bold; }
+  </style>
+</head>
+<body>
+
+<div id="header">
+  <h1>◈ Library Seeder</h1>
+  <p>Seeds the Kyuri Archive into Orycl's permanent memory</p>
+</div>
+
+<div id="main">
+
+  <!-- STATUS -->
+  <div class="card">
+    <div class="card-title">Status</div>
+    <div id="status-bar">
+      <div id="status-dot"></div>
+      <div id="status-text">Ready to scan library</div>
+    </div>
+    <div id="progress-wrap">
+      <div id="progress-bar-bg"><div id="progress-bar-fill"></div></div>
+      <div id="progress-label"></div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="card">
+    <div class="card-title">Memory Stats</div>
+    <div id="stats-row">
+      <div class="stat"><div class="stat-val" id="stat-total">—</div><div class="stat-label">Total in Brain</div></div>
+      <div class="stat"><div class="stat-val" id="stat-seeded">0</div><div class="stat-label">Seeded This Run</div></div>
+      <div class="stat"><div class="stat-val" id="stat-skipped">0</div><div class="stat-label">Skipped / Failed</div></div>
+      <div class="stat"><div class="stat-val" id="stat-books">—</div><div class="stat-label">Books Found</div></div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="card">
+    <div class="card-title">Actions</div>
+    <div id="controls">
+      <button class="btn btn-primary" id="btn-seed">◈ Seed Full Library</button>
+      <button class="btn btn-ghost"   id="btn-check">Check Brain Health</button>
+      <button class="btn btn-danger"  id="btn-reset" title="Clears all memory — use with caution">Reset Brain Memory</button>
+    </div>
+  </div>
+
+  <!-- LOG -->
+  <div class="card">
+    <div class="card-title">Log</div>
+    <div id="log"><span class="log-info">Waiting to start…</span></div>
+  </div>
+
+</div>
+
+<script>
+const BRAIN        = 'https://divine-playfulness-production-eabb.up.railway.app';
+const LIBRARY_JSON = 'https://raw.githubusercontent.com/Kyuri-V/books/main/library.json';
+const BASE_URL     = 'https://kyuri-v.github.io/books';
+const DELAY_MS     = 600; // ms between seeds — be gentle
+
+let running  = false;
+let seeded   = 0;
+let skipped  = 0;
+
+/* ── LOG ── */
+function log(msg, cls = '') {
+  const el  = document.getElementById('log');
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+
+function setStatus(text, state) {
+  document.getElementById('status-text').textContent = text;
+  const dot = document.getElementById('status-dot');
+  dot.className = state ? state : '';
+}
+
+function setProgress(done, total) {
+  const wrap = document.getElementById('progress-wrap');
+  wrap.style.display = 'block';
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('progress-bar-fill').style.width  = pct + '%';
+  document.getElementById('progress-label').textContent     = `${done} / ${total} — ${pct}%`;
+}
+
+function updateStats() {
+  document.getElementById('stat-seeded').textContent  = seeded;
+  document.getElementById('stat-skipped').textContent = skipped;
+}
+
+/* ── HEALTH CHECK ── */
+async function checkBrain() {
+  try {
+    const res  = await fetch(`${BRAIN}/health`);
+    const data = await res.json();
+    document.getElementById('stat-total').textContent = data.memory_nodes ?? '—';
+    log(`◈ Brain: ${data.memory_nodes} nodes · ${data.named_anchors} anchors · embed: ${data.embed_mode}`, 'log-info');
+    setStatus('Brain connected — ready', 'ready');
+    return true;
+  } catch(e) {
+    log(`✗ Brain unreachable: ${e.message}`, 'log-err');
+    setStatus('Brain unreachable', 'error');
+    return false;
+  }
+}
+
+/* ── COLLECT ALL BOOKS ── */
+function collectBooks(library) {
+  const all = [];
+  for (const section of library.sections || []) {
+    for (const book of section.books || []) {
+      all.push({ ...book, section: section.label });
+      // Sub-books
+      for (const sub of book.sub_books || []) {
+        all.push({ ...sub, section: section.label, parent_title: book.title });
+      }
+    }
+  }
+  return all;
+}
+
+/* ── FETCH & EXTRACT TEXT ── */
+async function fetchBookText(book) {
+  const url = `${BASE_URL}${book.url}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const html = await res.text();
+
+  // Parse and extract meaningful text
+  const parser = new DOMParser();
+  const doc    = parser.parseFromString(html, 'text/html');
+
+  // Remove nav, script, style, header boilerplate
+  doc.querySelectorAll('script,style,nav,header,footer,.nav,.sidebar').forEach(el => el.remove());
+
+  // Try to get main content
+  const content = doc.querySelector('main, article, .content, #content, body');
+  const text    = (content || doc.body).innerText || (content || doc.body).textContent || '';
+
+  // Clean up whitespace
+  return text.replace(/\s+/g, ' ').trim().slice(0, 8000); // cap at 8k chars per doc
+}
+
+/* ── SEED ONE BOOK ── */
+async function seedBook(book) {
+  const text = await fetchBookText(book);
+  if (!text || text.length < 50) throw new Error('empty content');
+
+  // Build a rich label
+  const label = [
+    book.title,
+    book.tag || '',
+    book.subtitle || '',
+    book.section || '',
+  ].filter(Boolean).join(' · ');
+
+  // Include desc and keywords as context prefix
+  const fullText = [
+    book.desc ? `Summary: ${book.desc}` : '',
+    book.keywords?.length ? `Keywords: ${book.keywords.join(', ')}` : '',
+    '',
+    text
+  ].filter(Boolean).join('\n').trim();
+
+  const res  = await fetch(`${BRAIN}/memory/seed`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({
+      text:  fullText,
+      label: label,
+      type:  'reference'
+    })
+  });
+  if (!res.ok) throw new Error(`Seed HTTP ${res.status}`);
+  return await res.json();
+}
+
+/* ── MAIN SEED FLOW ── */
+async function seedLibrary() {
+  if (running) return;
+  running = true;
+  seeded  = 0;
+  skipped = 0;
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('btn-seed').disabled = true;
+
+  setStatus('Fetching library index…', 'running');
+
+  // Fetch library.json
+  let library;
+  try {
+    const res = await fetch(LIBRARY_JSON + '?_=' + Date.now());
+    library   = await res.json();
+    log(`◈ Library: "${library.title}" — ${library.sections?.length} sections`, 'log-head');
+  } catch(e) {
+    log(`✗ Could not fetch library.json: ${e.message}`, 'log-err');
+    setStatus('Failed to fetch library', 'error');
+    running = false;
+    document.getElementById('btn-seed').disabled = false;
+    return;
+  }
+
+  const books = collectBooks(library);
+  document.getElementById('stat-books').textContent = books.length;
+  log(`◈ Found ${books.length} documents (books + sub-books)`, 'log-info');
+
+  // Seed each
+  for (let i = 0; i < books.length; i++) {
+    const book = books[i];
+    const num  = `[${i+1}/${books.length}]`;
+
+    setStatus(`Seeding ${i+1} of ${books.length}…`, 'running');
+    setProgress(i, books.length);
+
+    try {
+      await seedBook(book);
+      seeded++;
+      log(`${num} ✓ ${book.title}`, 'log-ok');
+    } catch(e) {
+      skipped++;
+      log(`${num} ✗ ${book.title} — ${e.message}`, e.message.includes('empty') ? 'log-skip' : 'log-err');
+    }
+
+    updateStats();
+    await new Promise(r => setTimeout(r, DELAY_MS));
+  }
+
+  setProgress(books.length, books.length);
+  setStatus(`Complete — ${seeded} seeded, ${skipped} skipped`, 'done');
+  log(``, '');
+  log(`◈ Seeding complete. ${seeded} documents planted in Orycl's memory.`, 'log-head');
+
+  // Refresh brain stats
+  await checkBrain();
+
+  running = false;
+  document.getElementById('btn-seed').disabled = false;
+}
+
+/* ── RESET ── */
+async function resetBrain() {
+  if (!confirm('This will erase ALL memory nodes from the brain. Are you sure?')) return;
+  try {
+    const res  = await fetch(`${BRAIN}/brain/reset`, { method: 'POST' });
+    const data = await res.json();
+    log(`⚠ Brain reset: ${JSON.stringify(data)}`, 'log-err');
+    seeded  = 0; skipped = 0; updateStats();
+    document.getElementById('stat-total').textContent = '0';
+    setStatus('Brain reset — ready to re-seed', 'ready');
+  } catch(e) {
+    log(`✗ Reset failed: ${e.message}`, 'log-err');
+  }
+}
+
+/* ── INIT ── */
+document.getElementById('btn-seed').addEventListener('click',  seedLibrary);
+document.getElementById('btn-check').addEventListener('click', checkBrain);
+document.getElementById('btn-reset').addEventListener('click', resetBrain);
+
+// Auto check on load
+checkBrain();
+</script>
+</body>
+</html>
