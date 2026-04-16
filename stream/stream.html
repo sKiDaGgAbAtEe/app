@@ -470,18 +470,20 @@
   <!-- BOT DRAWER -->
   <div id="bot-drawer">
     <h3>◈ Orycl in Chat</h3>
-    <p>Enter the bot account credentials once. Orycl will connect automatically every time you open this page.</p>
+    <p>Orycl's bot runs server-side. Enter the bot username (for echo filtering) and the shared secret you set in Railway env vars.</p>
+
     <div id="bot-status-row">
       <div id="bot-status-dot"></div>
       <span id="bot-status-text">Not connected</span>
     </div>
+
     <div class="bot-field">
       <label>Bot Username</label>
-      <input type="text" id="bot-user-input" placeholder="e.g. orycl" autocomplete="off" spellcheck="false" />
+      <input type="text" id="bot-user-input" placeholder="e.g. 0rycl" autocomplete="off" spellcheck="false" />
     </div>
     <div class="bot-field">
-      <label>Bot OAuth Token</label>
-      <input type="password" id="bot-token-input" placeholder="oauth:xxxxxxxxxxxxxxxx" autocomplete="off" />
+      <label>Bot Secret  (TWITCH_BOT_SECRET from Railway)</label>
+      <input type="password" id="bot-token-input" placeholder="your shared secret" autocomplete="off" />
     </div>
     <div class="bot-actions">
       <button class="bot-save-btn" id="bot-save-btn">Save &amp; Activate</button>
@@ -845,10 +847,24 @@ function setAuthedUI(authed) {
   discBtnEl.className      = authed ? 'show' : '';
 }
 
+let readerReconnectTimer = null;
+let readerReconnectDelay = 4000;
+
+function scheduleReaderReconnect() {
+  if (readerReconnectTimer) return;
+  readerReconnectTimer = setTimeout(() => {
+    readerReconnectTimer = null;
+    readerReconnectDelay = Math.min(readerReconnectDelay * 1.5, 30000);
+    if (document.visibilityState !== 'hidden') connectReader(readerUser, readerToken);
+  }, readerReconnectDelay);
+}
+
 function connectReader(user, token) {
+  if (readerReconnectTimer) { clearTimeout(readerReconnectTimer); readerReconnectTimer = null; }
   if (readerWs) { readerWs.close(); readerWs = null; }
   readerUser  = (user || '').toLowerCase();
   readerToken = token || '';
+  readerReconnectDelay = 4000;
 
   readerWs = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
 
@@ -873,11 +889,18 @@ function connectReader(user, token) {
 
       if (msg.command === '001') {
         setConnState('connected');
+        readerReconnectDelay = 4000; // reset backoff on successful connect
         if (readerToken && readerUser) {
           setAuthedUI(true);
-          postSystem(`connected as ${readerUser}`);
+          if (!sessionStorage.getItem('chat_connected_shown')) {
+            postSystem(`connected as ${readerUser}`);
+            sessionStorage.setItem('chat_connected_shown', '1');
+          }
         } else {
-          postSystem('connected · read-only');
+          if (!sessionStorage.getItem('chat_anon_shown')) {
+            postSystem('connected · read-only');
+            sessionStorage.setItem('chat_anon_shown', '1');
+          }
         }
         return;
       }
@@ -941,10 +964,8 @@ function connectReader(user, token) {
   readerWs.onerror  = () => setConnState('error');
   readerWs.onclose  = () => {
     setConnState('disconnected');
-    const hasSavedCreds = localStorage.getItem('skida_chat_user') && localStorage.getItem('skida_chat_token');
-    if (hasSavedCreds && document.visibilityState !== 'hidden') {
-      setTimeout(() => connectReader(readerUser, readerToken), 4000);
-    }
+    const hasCreds = localStorage.getItem('skida_chat_user') && localStorage.getItem('skida_chat_token');
+    if (hasCreds) scheduleReaderReconnect();
   };
 }
 
@@ -956,40 +977,31 @@ function sendChat(text) {
 }
 
 /* ═══════════════════════════════════════════
-   IRC — BOT
+   BOT — server-side via Railway /bot/say
 ═══════════════════════════════════════════ */
-let botWs    = null;
-let botUser  = '';
-let botToken = '';
-let botReady = false;
+const BOT_SAY_URL    = `${BRAIN_URL.replace('divine-playfulness-production-eabb.up.railway.app', 'divine-playfulness-production-eabb.up.railway.app')}/bot/say`;
+// Store bot secret in localStorage — set once via ◈ Bot drawer
+function getBotSecret() { return localStorage.getItem('skida_bot_secret') || ''; }
 
-function connectBot(user, token) {
-  if (!user || !token) return;
-  botUser  = user.toLowerCase();
-  botToken = token.startsWith('oauth:') ? token : 'oauth:' + token;
+// botUser kept for filtering echoes in the reader
+let botUser = localStorage.getItem('skida_bot_user') || '0rycl';
+let botReady = true; // server manages the actual connection
 
-  botWs = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
-  botWs.onopen = () => {
-    botWs.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
-    botWs.send(`PASS ${botToken}`);
-    botWs.send(`NICK ${botUser}`);
-    botWs.send(`JOIN #${CHANNEL}`);
-  };
-  botWs.onmessage = e => {
-    e.data.split('\r\n').forEach(line => {
-      if (!line) return;
-      const msg = parseIRC(line);
-      if (msg.command === 'PING') { botWs.send('PONG :tmi.twitch.tv'); return; }
-      if (msg.command === '001' || msg.command === 'JOIN') botReady = true;
-    });
-  };
-  botWs.onerror = () => { botReady = false; };
-  botWs.onclose = () => { botReady = false; setTimeout(() => connectBot(botUser, botToken), 6000); };
+function connectBot(user) {
+  // No-op — bot runs server-side. Just update the local username for echo filtering.
+  botUser = (user || '0rycl').toLowerCase();
 }
 
-function sendBot(text) {
-  if (!botWs || botWs.readyState !== WebSocket.OPEN || !botReady) return;
-  botWs.send(`PRIVMSG #${CHANNEL} :${text}`);
+async function sendBot(text) {
+  try {
+    await fetch(`https://divine-playfulness-production-eabb.up.railway.app/bot/say`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, secret: getBotSecret() })
+    });
+  } catch (err) {
+    console.warn('Bot say error:', err.message);
+  }
 }
 
 /* ═══════════════════════════════════════════
@@ -1119,35 +1131,44 @@ botOverlay.addEventListener('click', closeBotDrawer);
 botCloseBtn.addEventListener('click', closeBotDrawer);
 
 botSaveBtn.addEventListener('click', () => {
-  const user  = document.getElementById('bot-user-input').value.trim();
-  const token = document.getElementById('bot-token-input').value.trim();
-  if (!user || !token) {
+  const user   = document.getElementById('bot-user-input').value.trim();
+  const secret = document.getElementById('bot-token-input').value.trim();
+  if (!user || !secret) {
     document.getElementById(user ? 'bot-token-input' : 'bot-user-input').focus();
     return;
   }
-  localStorage.setItem('skida_bot_user',  user);
-  localStorage.setItem('skida_bot_token', token);
+  localStorage.setItem('skida_bot_user',   user);
+  localStorage.setItem('skida_bot_secret', secret);
+  botUser = user.toLowerCase();
   closeBotDrawer();
-  connectBot(user, token);
-  // Poll until connected then update UI
-  const poll = setInterval(() => {
-    updateBotStatusUI();
-    if (botReady) { clearInterval(poll); postSystem('◈ orycl bot active'); }
-  }, 500);
-  setTimeout(() => clearInterval(poll), 10000); // stop polling after 10s
+  // Verify connection by pinging /bot/say
+  fetch(`https://divine-playfulness-production-eabb.up.railway.app/bot/say`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: '◈ orycl is here', secret })
+  }).then(r => r.json()).then(d => {
+    if (d.sent) {
+      botStatusDot.classList.add('active');
+      botStatusTxt.textContent = `Active as ${user}`;
+      botSetupBtn.classList.add('bot-active');
+      botSetupBtn.textContent = '◈ Active';
+      postSystem('◈ orycl bot active');
+    } else {
+      postSystem('◈ bot connected but not ready — check Railway env vars');
+    }
+  }).catch(() => postSystem('◈ could not reach bot endpoint'));
 });
 
 botClearBtn.addEventListener('click', () => {
-  if (!confirm('Remove Orycl bot credentials?')) return;
+  if (!confirm('Remove Orycl bot settings?')) return;
   localStorage.removeItem('skida_bot_user');
-  localStorage.removeItem('skida_bot_token');
-  if (botWs) { botWs.close(); botWs = null; }
-  botUser = ''; botToken = ''; botReady = false;
+  localStorage.removeItem('skida_bot_secret');
+  botUser = '0rycl';
   document.getElementById('bot-user-input').value  = '';
   document.getElementById('bot-token-input').value = '';
   botClearBtn.className = 'bot-clear-btn';
   updateBotStatusUI();
-  postSystem('◈ orycl bot disconnected');
+  postSystem('◈ orycl bot settings cleared');
 });
 
 document.getElementById('bot-token-input').addEventListener('keydown', e => {
@@ -1161,17 +1182,14 @@ window.addEventListener('load', () => {
   initPlayer();
   load7TV();
 
-  // Load saved bot creds
-  const savedBotUser  = localStorage.getItem('skida_bot_user');
-  const savedBotToken = localStorage.getItem('skida_bot_token');
-  if (savedBotUser && savedBotToken) {
-    connectBot(savedBotUser, savedBotToken);
-    // Poll briefly to update button state once connected
-    const poll = setInterval(() => {
-      updateBotStatusUI();
-      if (botReady) clearInterval(poll);
-    }, 500);
-    setTimeout(() => clearInterval(poll), 8000);
+  // Bot runs server-side — just restore username for echo filtering
+  const savedBotUser = localStorage.getItem('skida_bot_user');
+  if (savedBotUser) {
+    botUser = savedBotUser.toLowerCase();
+    botSetupBtn.classList.add('bot-active');
+    botSetupBtn.textContent = '◈ Active';
+    botStatusDot.classList.add('active');
+    botStatusTxt.textContent = `Active as ${savedBotUser}`;
   }
 
   // Load saved viewer creds — connect authed if present, anon if not
