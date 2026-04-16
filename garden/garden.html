@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>sKiDa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: 'Lato', sans-serif;
+    }
+
+    #bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: radial-gradient(ellipse at 30% 20%, #1a3a20 0%, #0a1a10 40%, #0d0a1a 70%, #1a0d08 100%);
+    }
+    #bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 65% 75%, rgba(180,80,0,0.35) 0%, transparent 55%);
+    }
+    #bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 25% 50%, rgba(0,120,80,0.2) 0%, transparent 60%);
+    }
+
+    #bg-video {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 1;
+      filter: brightness(0.45);
+    }
+
+    #overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      background: linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.06) 0%,
+        rgba(0,0,0,0.02) 30%,
+        rgba(0,0,0,0.45) 65%,
+        rgba(0,0,0,0.82) 100%
+      );
+    }
+
+    /* ── LANDING ── */
+    #landing {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      transition: opacity 1.4s ease;
+    }
+    #landing.fade-out { opacity: 0; pointer-events: none; }
+
+    #landing-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 30% 20%, #1a3a20 0%, #0a1a10 40%, #0d0a1a 70%, #1a0d08 100%);
+    }
+    #landing-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 65% 75%, rgba(180,80,0,0.28) 0%, transparent 55%);
+    }
+
+    #landing-inner {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      user-select: none;
+    }
+
+    #landing-logo {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(52px, 14vw, 96px);
+      font-weight: 600;
+      letter-spacing: 8px;
+      color: #fff;
+      animation: breathe 3.5s ease-in-out infinite;
+      line-height: 1;
+    }
+    @keyframes breathe {
+      0%, 100% { text-shadow: 0 0 40px rgba(255,180,60,0.25); }
+      50%       { text-shadow: 0 0 70px rgba(255,180,60,0.55), 0 0 120px rgba(255,130,0,0.2); }
+    }
+
+    #landing-sub {
+      font-size: clamp(10px, 2vw, 13px);
+      letter-spacing: 4px;
+      color: rgba(255,255,255,0.35);
+      text-transform: uppercase;
+      margin-top: 10px;
+      margin-bottom: 52px;
+    }
+
+    #enter-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.72);
+      font-family: 'Lato', sans-serif;
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      padding: 14px 44px;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: border-color 0.3s, color 0.3s, background 0.3s, transform 0.15s;
+    }
+    #enter-btn:hover {
+      border-color: rgba(255,180,60,0.5);
+      color: #fff;
+      background: rgba(255,180,60,0.07);
+    }
+    #enter-btn:active { transform: scale(0.97); }
+
+    #music-hint {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.16);
+      margin-top: 18px;
+      text-transform: uppercase;
+    }
+
+    /* ── DASHBOARD ── */
+    #dashboard {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1s ease 0.5s;
+    }
+    #dashboard.visible { opacity: 1; pointer-events: all; }
+
+    #topbar {
+      position: relative;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 26px 8px;
+      flex-shrink: 0;
+    }
+
+    #name-block {
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.9s ease, transform 0.9s ease;
+    }
+    #name-block.show { opacity: 1; transform: translateY(0); }
+
+    #name-block h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(26px, 6.5vw, 40px);
+      font-weight: 600;
+      letter-spacing: 5px;
+      color: #fff;
+      text-shadow: 0 0 28px rgba(255,180,60,0.4);
+      line-height: 1;
+    }
+    #name-block .tagline {
+      font-size: 9px;
+      letter-spacing: 2.5px;
+      color: rgba(255,255,255,0.35);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    #vol-btn {
+      background: rgba(0,0,0,0.18);
+      border: 1px solid rgba(255,255,255,0.09);
+      color: rgba(255,255,255,0.4);
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, color 0.2s;
+      flex-shrink: 0;
+    }
+    #vol-btn:hover { background: rgba(255,255,255,0.09); color: #fff; }
+
+    #coffee-btn {
+      display: flex; align-items: center;
+      cursor: pointer; flex-shrink: 0;
+      opacity: 0.55; transition: opacity 0.2s, transform 0.15s;
+      text-decoration: none;
+    }
+    #coffee-btn:hover { opacity: 1; transform: scale(1.05); }
+    #coffee-btn img { height: 24px; width: auto; display: block; }
+
+    /* ── COMPACT GHOST TAB NAV ── */
+    #tab-nav {
+      position: relative;
+      z-index: 20;
+      display: flex;
+      gap: 4px;
+      padding: 0 20px 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex-shrink: 0;
+      opacity: 0;
+      transition: opacity 0.7s ease 0.2s;
+    }
+    #tab-nav.show { opacity: 1; }
+    #tab-nav::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      background: rgba(0,0,0,0.12);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.28);
+      font-family: 'Lato', sans-serif;
+      font-size: 9px;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .tab-btn.active {
+      background: rgba(255,180,60,0.1);
+      border-color: rgba(255,180,60,0.3);
+      color: rgba(255,210,120,0.88);
+    }
+    .tab-btn:hover:not(.active) {
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.52);
+    }
+
+    /* ── PANELS ── */
+    #panels {
+      position: relative;
+      z-index: 15;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .cards-panel {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 9px;
+      padding: 0 20px 32px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.07) transparent;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+
+    .slime-card {
+      width: 260px !important;
+      flex-shrink: 0;
+    }
+    .cards-panel.active { opacity: 1; pointer-events: all; }
+    .cards-panel::-webkit-scrollbar { width: 2px; }
+    .cards-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 4px; }
+
+    .slime-card {
+      border-radius: 999px;
+      padding: 8px 18px 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+      border: 1px solid rgba(255,255,255,0.07);
+      text-decoration: none;
+      color: #fff;
+      backdrop-filter: blur(16px) saturate(1.4);
+      -webkit-backdrop-filter: blur(16px) saturate(1.4);
+      flex-shrink: 0;
+      animation: slideUp 0.45s ease both;
+    }
+    .slime-card:hover { transform: scale(1.015); }
+    .slime-card:active { transform: scale(0.98); opacity: 0.8; }
+
+    .slime-card:nth-child(1) { animation-delay: 0.05s; }
+    .slime-card:nth-child(2) { animation-delay: 0.12s; }
+    .slime-card:nth-child(3) { animation-delay: 0.19s; }
+    .slime-card:nth-child(4) { animation-delay: 0.26s; }
+    .slime-card:nth-child(5) { animation-delay: 0.33s; }
+    .slime-card:nth-child(6) { animation-delay: 0.40s; }
+    .slime-card:nth-child(7) { animation-delay: 0.47s; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .card-text { flex: 1; min-width: 0; }
+    .card-title { font-size: 12px; font-weight: 500; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-sub   { font-size: 9.5px; color: rgba(255,255,255,0.42); margin-top: 2px; letter-spacing: 0.3px; }
+    .card-arrow { font-size: 17px; color: rgba(255,255,255,0.22); flex-shrink: 0; }
+
+    .live-pill {
+      background: #d93030;
+      color: #fff;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      padding: 2px 7px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      animation: pulse 1.6s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.38; }
+    }
+
+    .iframe-panel {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    .iframe-panel.active { opacity: 1; pointer-events: all; }
+
+    .iframe-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 20px 10px;
+      flex-shrink: 0;
+    }
+    .back-btn {
+      background: rgba(0,0,0,0.18);
+      border: 1px solid rgba(255,255,255,0.09);
+      color: rgba(255,255,255,0.52);
+      font-family: 'Lato', sans-serif;
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      backdrop-filter: blur(8px);
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.09); color: #fff; }
+
+    .iframe-label {
+      font-size: 10px;
+      letter-spacing: 2.5px;
+      color: rgba(255,255,255,0.28);
+      text-transform: uppercase;
+    }
+
+    .iframe-wrap {
+      flex: 1;
+      margin: 0 20px 20px;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(0,0,0,0.28);
+    }
+    .iframe-wrap iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+<div id="bg"></div>
+<video id="bg-video" src="/app/bg.mp4" autoplay muted loop playsinline></video>
+<div id="overlay"></div>
+
+<audio id="ambient" src="/app/1.mp3" loop preload="auto"></audio>
+
+<!-- ═══ LANDING ═══ -->
+<div id="landing">
+  <div id="landing-bg"></div>
+  <div id="landing-inner">
+    <div id="landing-logo">sKiDa</div>
+    <div id="landing-sub">find your better self</div>
+    <button id="enter-btn">Enter</button>
+    <div id="music-hint">♪ &nbsp;"Kokoro no sukima mo.." ~sKiDa</div>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div id="dashboard">
+
+  <div id="topbar">
+    <div id="name-block">
+      <h1>sKiDa</h1>
+      <div class="tagline">find your better self</div>
+    </div>
+    <button id="vol-btn" title="Toggle mute">🔊</button>
+    <a id="coffee-btn" href="https://buymeacoffee.com/skidaggabatee" target="_blank" rel="noopener" title="Buy Me a Coffee">
+      <img src="/app/coffee.png" alt="Buy Me a Coffee" />
+    </a>
+  </div>
+
+  <div id="tab-nav">
+    <button class="tab-btn active" data-tab="home">Home</button>
+    <button class="tab-btn" data-tab="stream">Stream</button>
+    <button class="tab-btn" data-tab="essays">Essays</button>
+    <button class="tab-btn" data-tab="journal">Journal</button>
+    <button class="tab-btn" data-tab="schedule">Schedule</button>
+    <button class="tab-btn" data-tab="clips">Clips</button>
+    <button class="tab-btn" data-tab="garden">Support</button>
+    <button class="tab-btn" data-tab="about">About</button>
+  </div>
+
+  <div id="panels">
+
+    <!-- HOME -->
+    <div class="cards-panel active" id="panel-home">
+      <div class="slime-card" data-open="stream" style="background:rgba(20,60,40,0.70);">
+        <div class="card-icon" style="background:rgba(30,120,70,0.38);">📺</div>
+        <div class="card-text">
+          <div class="card-title">Live on Twitch</div>
+          <div class="card-sub">twitch.tv/sKiDaGgAbAtEe</div>
+        </div>
+        <div class="live-pill">live</div>
+      </div>
+
+      <div class="slime-card" data-open="essays" style="background:rgba(40,20,70,0.70);">
+        <div class="card-icon" style="background:rgba(80,30,140,0.38);">✍️</div>
+        <div class="card-text">
+          <div class="card-title">Essays</div>
+          <div class="card-sub">thoughts on growth &amp; healing</div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+
+      <div class="slime-card" data-open="journal" style="background:rgba(60,30,10,0.70);">
+        <div class="card-icon" style="background:rgba(140,60,20,0.38);">📖</div>
+        <div class="card-text">
+          <div class="card-title">Journal</div>
+          <div class="card-sub">the honest story</div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+
+      <div class="slime-card" data-open="schedule" style="background:rgba(10,40,70,0.70);">
+        <div class="card-icon" style="background:rgba(20,80,150,0.38);">🗓</div>
+        <div class="card-text">
+          <div class="card-title">Schedule + Events</div>
+          <div class="card-sub">when &amp; where to find me</div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+
+      <div class="slime-card" data-open="clips" style="background:rgba(50,10,40,0.70);">
+        <div class="card-icon" style="background:rgba(130,20,80,0.38);">🎞</div>
+        <div class="card-text">
+          <div class="card-title">Clips &amp; VODs</div>
+          <div class="card-sub">YouTube · Patreon</div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+
+      <div class="slime-card" data-open="garden" style="background:rgba(30,50,10,0.70);">
+        <div class="card-icon" style="background:rgba(60,110,20,0.38);">🌿</div>
+        <div class="card-text">
+          <div class="card-title">Support the Garden</div>
+          <div class="card-sub">Patreon membership</div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+
+      <div class="slime-card" data-open="about" style="background:rgba(55,40,5,0.70);">
+        <div class="card-icon" style="background:rgba(130,90,10,0.38);">🕯</div>
+        <div class="card-text">
+          <div class="card-title">About sKiDa</div>
+          <div class="card-sub">the vtuber who came back</div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+    </div>
+
+    <!-- STREAM -->
+    <div class="iframe-panel" id="panel-stream">
+      <div class="iframe-header">
+        <button class="back-btn">‹ Back</button>
+        <span class="iframe-label">Live Stream</span>
+      </div>
+      <div class="iframe-wrap">
+        <iframe src="/app/stream/stream.html" title="Live Stream" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+      </div>
+    </div>
+
+    <!-- ESSAYS -->
+    <div class="iframe-panel" id="panel-essays">
+      <div class="iframe-header">
+        <button class="back-btn">‹ Back</button>
+        <span class="iframe-label">Essays</span>
+      </div>
+      <div class="iframe-wrap">
+        <iframe src="https://skidaggabatee.github.io/essay/index.html" title="Essays" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <!-- JOURNAL -->
+    <div class="iframe-panel" id="panel-journal">
+      <div class="iframe-header">
+        <button class="back-btn">‹ Back</button>
+        <span class="iframe-label">Journal</span>
+      </div>
+      <div class="iframe-wrap">
+        <iframe src="/app/journal/journal.html" title="Journal" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <!-- SCHEDULE -->
+    <div class="iframe-panel" id="panel-schedule">
+      <div class="iframe-header">
+        <button class="back-btn">‹ Back</button>
+        <span class="iframe-label">Schedule + Events</span>
+      </div>
+      <div class="iframe-wrap">
+        <iframe src="/app/schedule/schedule.html" title="Schedule" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <!-- CLIPS -->
+    <div class="iframe-panel" id="panel-clips">
+      <div class="iframe-header">
+        <button class="back-btn">‹ Back</button>
+        <span class="iframe-label">Clips &amp; VODs</span>
+      </div>
+      <div class="iframe-wrap">
+        <iframe src="/app/clips/clips.html" title="Clips &amp; VODs" allow="autoplay; fullscreen" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <!-- GARDEN -->
+    <div class="iframe-panel" id="panel-garden">
+      <div class="iframe-header">
+        <button class="back-btn">‹ Back</button>
+        <span class="iframe-label">Support the Garden</span>
+      </div>
+      <div class="iframe-wrap">
+        <iframe src="/app/garden/garden.html" title="Support" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="iframe-panel" id="panel-about">
+      <div class="iframe-header">
+        <button class="back-btn">‹ Back</button>
+        <span class="iframe-label">About sKiDa</span>
+      </div>
+      <div class="iframe-wrap">
+        <iframe src="/app/about/about.html" title="About sKiDa" loading="lazy"></iframe>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const landing   = document.getElementById('landing');
+  const dashboard = document.getElementById('dashboard');
+  const nameBlock = document.getElementById('name-block');
+  const tabNav    = document.getElementById('tab-nav');
+  const enterBtn  = document.getElementById('enter-btn');
+  const volBtn    = document.getElementById('vol-btn');
+  const audio     = document.getElementById('ambient');
+
+  audio.volume = 0.06;
+  let muted = false;
+
+  enterBtn.addEventListener('click', () => {
+    audio.play().catch(() => {});
+    landing.classList.add('fade-out');
+    setTimeout(() => {
+      landing.style.display = 'none';
+      dashboard.classList.add('visible');
+      setTimeout(() => {
+        nameBlock.classList.add('show');
+        tabNav.classList.add('show');
+      }, 150);
+    }, 1400);
+  });
+
+  volBtn.addEventListener('click', () => {
+    muted = !muted;
+    audio.muted = muted;
+    volBtn.textContent = muted ? '🔇' : '🔊';
+  });
+
+  function showTab(id) {
+    document.querySelectorAll('.cards-panel, .iframe-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const panel = document.getElementById('panel-' + id);
+    if (panel) panel.classList.add('active');
+    const btn = document.querySelector('[data-tab="' + id + '"]');
+    if (btn) btn.classList.add('active');
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => showTab(btn.dataset.tab));
+  });
+
+  document.querySelectorAll('[data-open]').forEach(card => {
+    card.addEventListener('click', () => showTab(card.dataset.open));
+  });
+
+  document.querySelectorAll('.back-btn').forEach(btn => {
+    btn.addEventListener('click', () => showTab('home'));
+  });
+
+  // Listen for back navigation from iframe pages
+  window.addEventListener('message', e => {
+    if (e.data?.type === 'skida-nav' && e.data?.tab) {
+      showTab(e.data.tab);
+    }
+  });
+</script>
+</body>
+</html>
