@@ -563,6 +563,7 @@
 const CHANNEL    = 'skidaggabatee';
 const PARENT     = ['skidaggabatee.github.io', 'localhost', '127.0.0.1'];
 const BRAIN_URL  = 'https://divine-playfulness-production-eabb.up.railway.app';
+const COCREATE_URL = 'https://cocreate-production.up.railway.app';
 
 const GLOBAL_CD_MS = 30_000;
 const USER_CD_MS   = 90_000;
@@ -994,7 +995,7 @@ function connectBot(user) {
 
 async function sendBot(text) {
   try {
-    await fetch(`https://divine-playfulness-production-eabb.up.railway.app/bot/say`, {
+    await fetch(`https://cocreate-production.up.railway.app/bot/say`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: text, secret: getBotSecret() })
@@ -1142,7 +1143,7 @@ botSaveBtn.addEventListener('click', () => {
   botUser = user.toLowerCase();
   closeBotDrawer();
   // Verify connection by pinging /bot/say
-  fetch(`https://divine-playfulness-production-eabb.up.railway.app/bot/say`, {
+  fetch(`https://cocreate-production.up.railway.app/bot/say`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ message: '◈ orycl is here', secret })
