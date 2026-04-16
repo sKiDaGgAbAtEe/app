@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>sKiDa · Schedule</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #060c09;
+      --gold:      rgba(255,180,60,1);
+      --gold-dim:  rgba(255,180,60,0.15);
+      --gold-glow: rgba(255,180,60,0.35);
+      --ember:     rgba(180,80,0,0.3);
+      --glass:     rgba(8,18,12,0.75);
+      --border:    rgba(255,255,255,0.07);
+      --border2:   rgba(255,255,255,0.12);
+      --text:      rgba(255,255,255,0.88);
+      --muted:     rgba(255,255,255,0.38);
+      --scroll:    rgba(255,255,255,0.06);
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg);
+      font-family: 'Lato', sans-serif;
+      overflow: hidden; color: var(--text);
+    }
+
+    #bg {
+      position: fixed; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse at 30% 20%, #1a3a20 0%, #0a1a10 40%, #0d0a1a 70%, #1a0d08 100%);
+    }
+    #bg::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 65% 75%, var(--ember) 0%, transparent 55%);
+    }
+    #bg::after {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 25% 50%, rgba(0,120,80,0.15) 0%, transparent 60%);
+    }
+
+    #root {
+      position: fixed; inset: 0; z-index: 10;
+      display: flex; flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    #header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 20px 10px; flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      background: rgba(6,12,9,0.6);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    }
+    #back-btn {
+      background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.09);
+      color: var(--muted); font-family: 'Lato', sans-serif;
+      font-size: 9px; letter-spacing: 1.6px; text-transform: uppercase;
+      padding: 4px 12px; border-radius: 20px; cursor: pointer;
+      transition: background 0.2s, color 0.2s; flex-shrink: 0;
+    }
+    #back-btn:hover { background: rgba(255,255,255,0.09); color: #fff; }
+    #header-title {
+      font-family: 'Cinzel', serif; font-size: clamp(14px, 3vw, 20px);
+      font-weight: 600; letter-spacing: 4px; color: #fff;
+      text-shadow: 0 0 22px var(--gold-glow); flex: 1;
+    }
+    #cal-nav {
+      display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    }
+    .nav-btn {
+      background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+      color: var(--muted); width: 28px; height: 28px; border-radius: 50%;
+      cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    #month-label {
+      font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 2px;
+      color: rgba(255,210,120,0.7); min-width: 130px; text-align: center;
+    }
+
+    /* ── BODY ── */
+    #body {
+      flex: 1; display: flex; flex-direction: column;
+      padding: 14px 20px 20px; gap: 12px; overflow: hidden;
+    }
+
+    /* ── CALENDAR GRID ── */
+    #cal-grid {
+      flex-shrink: 0;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    }
+
+    .cal-dow-row {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      border-bottom: 1px solid var(--border);
+    }
+    .cal-dow {
+      padding: 8px 0; text-align: center;
+      font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .cal-days {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+    }
+    .cal-day {
+      min-height: 52px; padding: 6px 8px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      position: relative; cursor: default;
+      transition: background 0.15s;
+    }
+    .cal-day:nth-child(7n) { border-right: none; }
+    .cal-day.other-month { opacity: 0.3; }
+    .cal-day.today { background: rgba(255,180,60,0.05); }
+    .cal-day.today .day-num { color: rgba(255,180,60,0.9); font-weight: 600; }
+    .cal-day.has-event { cursor: pointer; }
+    .cal-day.has-event:hover { background: rgba(255,255,255,0.03); }
+    .cal-day.selected { background: rgba(255,180,60,0.08); border-color: rgba(255,180,60,0.15); }
+
+    .day-num {
+      font-size: 11px; color: var(--muted); font-weight: 400;
+      display: block; margin-bottom: 3px;
+    }
+    .event-dot {
+      display: block; width: 5px; height: 5px; border-radius: 50%;
+      background: rgba(255,180,60,0.7);
+      margin: 1px 0;
+    }
+    .event-dot.stream { background: rgba(100,200,120,0.8); }
+    .event-dot.event  { background: rgba(180,120,255,0.8); }
+    .event-dot.special { background: rgba(255,140,60,0.9); }
+
+    /* ── EVENTS LIST ── */
+    #events-wrap {
+      flex: 1; overflow-y: auto;
+      scrollbar-width: thin; scrollbar-color: var(--scroll) transparent;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    #events-wrap::-webkit-scrollbar { width: 2px; }
+    #events-wrap::-webkit-scrollbar-thumb { background: var(--scroll); }
+
+    #events-heading {
+      font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+      color: var(--muted); padding: 2px 0 4px; flex-shrink: 0;
+    }
+
+    .event-card {
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px;
+      display: flex; align-items: flex-start; gap: 12px;
+      animation: cardIn 0.3s ease both;
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    @keyframes cardIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+
+    .event-type-bar {
+      width: 3px; border-radius: 2px; flex-shrink: 0;
+      align-self: stretch; min-height: 20px;
+    }
+    .event-type-bar.stream  { background: rgba(100,200,120,0.7); }
+    .event-type-bar.event   { background: rgba(180,120,255,0.7); }
+    .event-type-bar.special { background: rgba(255,140,60,0.8); }
+    .event-type-bar.other   { background: rgba(255,255,255,0.2); }
+
+    .event-body { flex: 1; min-width: 0; }
+    .event-title {
+      font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 3px;
+    }
+    .event-meta {
+      font-size: 10px; color: var(--muted); letter-spacing: 0.3px;
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .event-meta span { display: flex; align-items: center; gap: 4px; }
+
+    .event-link {
+      font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: rgba(255,180,60,0.6); text-decoration: none; flex-shrink: 0;
+      background: var(--gold-dim); border: 1px solid rgba(255,180,60,0.2);
+      border-radius: 20px; padding: 3px 10px; align-self: center;
+      transition: all 0.2s;
+    }
+    .event-link:hover { background: rgba(255,180,60,0.22); color: rgba(255,210,120,0.9); }
+
+    #no-events {
+      text-align: center; padding: 24px 0;
+      font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: rgba(255,255,255,0.15); display: none;
+    }
+
+    #loading-state {
+      display: flex; align-items: center; justify-content: center;
+      padding: 32px; gap: 8px;
+    }
+    .loading-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: rgba(255,180,60,0.4);
+      animation: ldot 1.2s ease-in-out infinite;
+    }
+    .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes ldot { 0%,60%,100%{opacity:0.2;transform:scale(0.7)} 30%{opacity:1;transform:scale(1)} }
+
+    @media (max-width: 500px) {
+      .cal-day { min-height: 38px; padding: 4px 5px; }
+      .day-num { font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+<div id="bg"></div>
+
+<div id="root">
+  <div id="header">
+    <button id="back-btn" onclick="window.parent.postMessage({type:'skida-nav',tab:'home'},'*')">‹ Back</button>
+    <div id="header-title">Schedule</div>
+    <div id="cal-nav">
+      <button class="nav-btn" id="prev-btn">‹</button>
+      <div id="month-label"></div>
+      <button class="nav-btn" id="next-btn">›</button>
+    </div>
+  </div>
+
+  <div id="body">
+    <div id="cal-grid">
+      <div class="cal-dow-row">
+        <div class="cal-dow">Sun</div><div class="cal-dow">Mon</div>
+        <div class="cal-dow">Tue</div><div class="cal-dow">Wed</div>
+        <div class="cal-dow">Thu</div><div class="cal-dow">Fri</div>
+        <div class="cal-dow">Sat</div>
+      </div>
+      <div class="cal-days" id="cal-days"></div>
+    </div>
+
+    <div id="events-heading">Upcoming</div>
+
+    <div id="events-wrap">
+      <div id="loading-state">
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+      </div>
+      <div id="no-events">Nothing scheduled this month</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   CONFIG
+   Schedule JSON lives at /app/schedule/schedule.json
+   Format:
+   [
+     {
+       "date": "2026-04-20",
+       "title": "Sunday Stream",
+       "time": "7:00 PM EST",
+       "type": "stream",        // stream | event | special | other
+       "description": "Chill gaming + chatting",
+       "link": "https://twitch.tv/skidaggabatee",
+       "link_label": "Watch"
+     }
+   ]
+═══════════════════════════════════════════ */
+const SCHEDULE_URL = '/app/schedule/schedule.json';
+
+let events      = [];
+let viewDate    = new Date();
+let selectedDay = null;
+
+/* ── FETCH ── */
+async function loadSchedule() {
+  try {
+    const res = await fetch(`${SCHEDULE_URL}?_=${Date.now()}`);
+    if (!res.ok) throw new Error('no schedule');
+    events = await res.json();
+  } catch(e) {
+    events = [];
+  }
+  document.getElementById('loading-state').style.display = 'none';
+  render();
+}
+
+/* ── HELPERS ── */
+function isoDate(year, month, day) {
+  return `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+}
+
+function eventsForDate(iso) {
+  return events.filter(e => e.date === iso);
+}
+
+function eventsForMonth(year, month) {
+  const prefix = `${year}-${String(month+1).padStart(2,'0')}`;
+  return events.filter(e => e.date.startsWith(prefix));
+}
+
+function formatDateHeading(iso) {
+  return new Date(iso + 'T12:00:00').toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric'
+  });
+}
+
+function formatMonthYear(d) {
+  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+}
+
+/* ── CALENDAR ── */
+function buildCalendar() {
+  document.getElementById('month-label').textContent = formatMonthYear(viewDate);
+
+  const year  = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const first = new Date(year, month, 1).getDay();
+  const days  = new Date(year, month + 1, 0).getDate();
+  const today = new Date().toISOString().slice(0, 10);
+
+  const container = document.getElementById('cal-days');
+  container.innerHTML = '';
+
+  // Prev month fill
+  const prevDays = new Date(year, month, 0).getDate();
+  for (let i = first - 1; i >= 0; i--) {
+    const el = document.createElement('div');
+    el.className = 'cal-day other-month';
+    el.innerHTML = `<span class="day-num">${prevDays - i}</span>`;
+    container.appendChild(el);
+  }
+
+  for (let d = 1; d <= days; d++) {
+    const iso  = isoDate(year, month, d);
+    const evs  = eventsForDate(iso);
+    const el   = document.createElement('div');
+    el.className = 'cal-day'
+      + (iso === today ? ' today' : '')
+      + (evs.length ? ' has-event' : '')
+      + (selectedDay === iso ? ' selected' : '');
+
+    let dots = evs.slice(0, 3).map(e =>
+      `<span class="event-dot ${e.type || 'other'}"></span>`
+    ).join('');
+
+    el.innerHTML = `<span class="day-num">${d}</span>${dots}`;
+
+    if (evs.length) {
+      el.addEventListener('click', () => {
+        selectedDay = iso;
+        buildCalendar();
+        showDayEvents(iso, evs);
+      });
+    }
+    container.appendChild(el);
+  }
+
+  // Next month fill
+  const total = first + days;
+  const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let d = 1; d <= remaining; d++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day other-month';
+    el.innerHTML = `<span class="day-num">${d}</span>`;
+    container.appendChild(el);
+  }
+}
+
+/* ── EVENTS LIST ── */
+function renderEvents(eventsToShow, heading) {
+  document.getElementById('events-heading').textContent = heading;
+  const wrap = document.getElementById('events-wrap');
+  // Remove all event cards
+  wrap.querySelectorAll('.event-card').forEach(el => el.remove());
+
+  if (!eventsToShow.length) {
+    document.getElementById('no-events').style.display = 'block';
+    return;
+  }
+  document.getElementById('no-events').style.display = 'none';
+
+  eventsToShow.forEach((ev, i) => {
+    const card = document.createElement('div');
+    card.className = 'event-card';
+    card.style.animationDelay = `${i * 0.05}s`;
+
+    const linkHtml = ev.link
+      ? `<a class="event-link" href="${ev.link}" target="_blank" rel="noopener">${ev.link_label || 'Link'} ↗</a>`
+      : '';
+
+    card.innerHTML = `
+      <div class="event-type-bar ${ev.type || 'other'}"></div>
+      <div class="event-body">
+        <div class="event-title">${ev.title}</div>
+        <div class="event-meta">
+          <span>📅 ${new Date(ev.date + 'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>
+          ${ev.time ? `<span>🕐 ${ev.time}</span>` : ''}
+          ${ev.description ? `<span>${ev.description}</span>` : ''}
+        </div>
+      </div>
+      ${linkHtml}`;
+
+    wrap.appendChild(card);
+  });
+}
+
+function showDayEvents(iso, evs) {
+  renderEvents(evs, formatDateHeading(iso));
+}
+
+function render() {
+  buildCalendar();
+  // Show upcoming events for this month by default
+  const year  = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const monthEvs = eventsForMonth(year, month)
+    .sort((a,b) => a.date.localeCompare(b.date));
+  renderEvents(monthEvs, 'This Month');
+}
+
+/* ── NAV ── */
+document.getElementById('prev-btn').addEventListener('click', () => {
+  viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1);
+  selectedDay = null;
+  render();
+});
+document.getElementById('next-btn').addEventListener('click', () => {
+  viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
+  selectedDay = null;
+  render();
+});
+
+loadSchedule();
+</script>
+</body>
+</html>
