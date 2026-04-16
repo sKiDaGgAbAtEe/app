@@ -344,6 +344,101 @@
     #disconnect-btn:hover { color: rgba(255,100,100,0.7); }
     #disconnect-btn.show  { display: inline; }
 
+    /* ── BOT SETUP BUTTON ── */
+    #bot-setup-btn {
+      background: var(--oryc-dim); border: 1px solid var(--oryc-border);
+      border-radius: 20px; color: var(--oryc);
+      font-family: 'Lato', sans-serif; font-size: 9px; letter-spacing: 1.6px;
+      text-transform: uppercase; padding: 4px 11px; cursor: pointer;
+      transition: all 0.2s; flex-shrink: 0;
+    }
+    #bot-setup-btn:hover { background: rgba(155,127,212,0.22); }
+    #bot-setup-btn.bot-active {
+      border-color: rgba(62,207,106,0.3); color: rgba(62,207,106,0.8);
+      background: rgba(62,207,106,0.07);
+    }
+
+    /* ── BOT DRAWER ── */
+    #bot-drawer {
+      position: fixed; top: 50%; left: 50%; z-index: 200;
+      transform: translate(-50%, -50%) scale(0.95);
+      width: min(90vw, 340px);
+      background: rgba(8,12,10,0.98); border: 1px solid var(--oryc-border);
+      border-radius: 16px; padding: 22px 20px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 30px rgba(155,127,212,0.06);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    }
+    #bot-drawer.open {
+      opacity: 1; pointer-events: all;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    #bot-drawer-overlay {
+      position: fixed; inset: 0; z-index: 199;
+      background: rgba(0,0,0,0.6);
+      opacity: 0; pointer-events: none; transition: opacity 0.25s;
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    }
+    #bot-drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+    #bot-drawer h3 {
+      font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 2.5px;
+      color: var(--oryc); margin-bottom: 6px; text-transform: uppercase;
+      text-shadow: 0 0 14px var(--oryc-glow);
+    }
+    #bot-drawer p { font-size: 10.5px; color: var(--muted); line-height: 1.65; margin-bottom: 12px; }
+
+    .bot-field { margin-bottom: 10px; }
+    .bot-field label {
+      display: block; font-size: 8.5px; letter-spacing: 1.8px; text-transform: uppercase;
+      color: rgba(255,255,255,0.25); margin-bottom: 4px;
+    }
+    .bot-field input {
+      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; padding: 8px 11px; color: #fff;
+      font-family: 'Lato', sans-serif; font-size: 11.5px; outline: none;
+      transition: border-color 0.2s; box-sizing: border-box;
+    }
+    .bot-field input:focus { border-color: var(--oryc-border); }
+    .bot-field input::placeholder { color: rgba(255,255,255,0.18); }
+
+    #bot-status-row {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+      font-size: 10px; color: var(--muted); min-height: 18px;
+    }
+    #bot-status-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #333; flex-shrink: 0; transition: background 0.4s;
+    }
+    #bot-status-dot.active { background: #3ecf6a; box-shadow: 0 0 6px #3ecf6a; }
+
+    .bot-actions { display: flex; gap: 8px; margin-top: 4px; }
+    .bot-save-btn {
+      flex: 1; padding: 9px; border-radius: 20px; cursor: pointer;
+      font-family: 'Lato', sans-serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+      background: var(--oryc-dim); border: 1px solid var(--oryc-border);
+      color: rgba(200,180,240,0.9); transition: all 0.2s;
+    }
+    .bot-save-btn:hover { background: rgba(155,127,212,0.25); }
+    .bot-close-btn {
+      flex: 1; padding: 9px; border-radius: 20px; cursor: pointer;
+      font-family: 'Lato', sans-serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+      background: transparent; border: 1px solid rgba(255,255,255,0.09);
+      color: var(--muted); transition: all 0.2s;
+    }
+    .bot-close-btn:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
+    .bot-clear-btn {
+      width: 100%; margin-top: 8px; padding: 7px; border-radius: 20px; cursor: pointer;
+      font-family: 'Lato', sans-serif; font-size: 8.5px; letter-spacing: 1.8px; text-transform: uppercase;
+      background: transparent; border: 1px solid rgba(255,80,80,0.15);
+      color: rgba(255,100,100,0.4); transition: all 0.2s; display: none;
+    }
+    .bot-clear-btn:hover { border-color: rgba(255,80,80,0.35); color: rgba(255,100,100,0.7); }
+    .bot-clear-btn.show { display: block; }
+    .bot-link-row { font-size: 9px; color: rgba(255,255,255,0.2); text-align: center; margin-top: 10px; }
+    .bot-link-row a { color: rgba(155,127,212,0.5); text-decoration: none; }
+    .bot-link-row a:hover { color: var(--oryc); }
+
     @media (max-width: 600px) {
       #body { flex-direction: column; }
       #stream-col { padding: 8px 8px 4px; }
@@ -365,7 +460,37 @@
       <div id="oryc-dot"></div>
       <span id="oryc-label">◈ Oryc</span>
     </div>
+    <button id="bot-setup-btn" title="Orycl bot settings">◈ Bot</button>
     <div id="live-badge">Live</div>
+  </div>
+
+  <!-- BOT DRAWER OVERLAY -->
+  <div id="bot-drawer-overlay"></div>
+
+  <!-- BOT DRAWER -->
+  <div id="bot-drawer">
+    <h3>◈ Orycl in Chat</h3>
+    <p>Enter the bot account credentials once. Orycl will connect automatically every time you open this page.</p>
+    <div id="bot-status-row">
+      <div id="bot-status-dot"></div>
+      <span id="bot-status-text">Not connected</span>
+    </div>
+    <div class="bot-field">
+      <label>Bot Username</label>
+      <input type="text" id="bot-user-input" placeholder="e.g. orycl" autocomplete="off" spellcheck="false" />
+    </div>
+    <div class="bot-field">
+      <label>Bot OAuth Token</label>
+      <input type="password" id="bot-token-input" placeholder="oauth:xxxxxxxxxxxxxxxx" autocomplete="off" />
+    </div>
+    <div class="bot-actions">
+      <button class="bot-save-btn" id="bot-save-btn">Save &amp; Activate</button>
+      <button class="bot-close-btn" id="bot-close-btn">Close</button>
+    </div>
+    <button class="bot-clear-btn" id="bot-clear-btn">Remove bot credentials</button>
+    <div class="bot-link-row">
+      Token for bot account at <a href="https://twitchapps.com/tmi/" target="_blank" rel="noopener">twitchapps.com/tmi</a>
+    </div>
   </div>
 
   <!-- BODY -->
@@ -943,6 +1068,92 @@ function initPlayer() {
 }
 
 /* ═══════════════════════════════════════════
+   BOT DRAWER UI
+═══════════════════════════════════════════ */
+const botDrawer    = document.getElementById('bot-drawer');
+const botOverlay   = document.getElementById('bot-drawer-overlay');
+const botSetupBtn  = document.getElementById('bot-setup-btn');
+const botSaveBtn   = document.getElementById('bot-save-btn');
+const botCloseBtn  = document.getElementById('bot-close-btn');
+const botClearBtn  = document.getElementById('bot-clear-btn');
+const botStatusDot = document.getElementById('bot-status-dot');
+const botStatusTxt = document.getElementById('bot-status-text');
+
+function openBotDrawer() {
+  // Pre-fill if saved
+  const savedUser  = localStorage.getItem('skida_bot_user');
+  const savedToken = localStorage.getItem('skida_bot_token');
+  if (savedUser)  document.getElementById('bot-user-input').value  = savedUser;
+  if (savedToken) document.getElementById('bot-token-input').value = savedToken;
+  botClearBtn.className = (savedUser || savedToken) ? 'bot-clear-btn show' : 'bot-clear-btn';
+  updateBotStatusUI();
+  botDrawer.classList.add('open');
+  botOverlay.classList.add('open');
+  setTimeout(() => document.getElementById('bot-user-input').focus(), 260);
+}
+
+function closeBotDrawer() {
+  botDrawer.classList.remove('open');
+  botOverlay.classList.remove('open');
+}
+
+function updateBotStatusUI() {
+  if (botReady) {
+    botStatusDot.classList.add('active');
+    botStatusTxt.textContent = `Active as ${botUser}`;
+    botSetupBtn.classList.add('bot-active');
+    botSetupBtn.textContent = '◈ Active';
+  } else {
+    botStatusDot.classList.remove('active');
+    botStatusTxt.textContent = localStorage.getItem('skida_bot_user')
+      ? 'Connecting…'
+      : 'Not connected';
+    botSetupBtn.classList.remove('bot-active');
+    botSetupBtn.textContent = '◈ Bot';
+  }
+}
+
+botSetupBtn.addEventListener('click', openBotDrawer);
+botOverlay.addEventListener('click', closeBotDrawer);
+botCloseBtn.addEventListener('click', closeBotDrawer);
+
+botSaveBtn.addEventListener('click', () => {
+  const user  = document.getElementById('bot-user-input').value.trim();
+  const token = document.getElementById('bot-token-input').value.trim();
+  if (!user || !token) {
+    document.getElementById(user ? 'bot-token-input' : 'bot-user-input').focus();
+    return;
+  }
+  localStorage.setItem('skida_bot_user',  user);
+  localStorage.setItem('skida_bot_token', token);
+  closeBotDrawer();
+  connectBot(user, token);
+  // Poll until connected then update UI
+  const poll = setInterval(() => {
+    updateBotStatusUI();
+    if (botReady) { clearInterval(poll); postSystem('◈ orycl bot active'); }
+  }, 500);
+  setTimeout(() => clearInterval(poll), 10000); // stop polling after 10s
+});
+
+botClearBtn.addEventListener('click', () => {
+  if (!confirm('Remove Orycl bot credentials?')) return;
+  localStorage.removeItem('skida_bot_user');
+  localStorage.removeItem('skida_bot_token');
+  if (botWs) { botWs.close(); botWs = null; }
+  botUser = ''; botToken = ''; botReady = false;
+  document.getElementById('bot-user-input').value  = '';
+  document.getElementById('bot-token-input').value = '';
+  botClearBtn.className = 'bot-clear-btn';
+  updateBotStatusUI();
+  postSystem('◈ orycl bot disconnected');
+});
+
+document.getElementById('bot-token-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') botSaveBtn.click();
+});
+
+/* ═══════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════ */
 window.addEventListener('load', () => {
@@ -952,7 +1163,15 @@ window.addEventListener('load', () => {
   // Load saved bot creds
   const savedBotUser  = localStorage.getItem('skida_bot_user');
   const savedBotToken = localStorage.getItem('skida_bot_token');
-  if (savedBotUser && savedBotToken) connectBot(savedBotUser, savedBotToken);
+  if (savedBotUser && savedBotToken) {
+    connectBot(savedBotUser, savedBotToken);
+    // Poll briefly to update button state once connected
+    const poll = setInterval(() => {
+      updateBotStatusUI();
+      if (botReady) clearInterval(poll);
+    }, 500);
+    setTimeout(() => clearInterval(poll), 8000);
+  }
 
   // Load saved viewer creds — connect authed if present, anon if not
   const savedUser  = localStorage.getItem('skida_chat_user');
