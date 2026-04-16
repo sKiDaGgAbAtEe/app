@@ -747,7 +747,7 @@ async function callOrycl(question, asker) {
   const msg =
     `A viewer named ${asker} asks: "${question}"` +
     buildVibeContext() +
-    `\n\nRespond directly to ${asker}. Plain text only. Under 280 characters. No markdown. One breath. Speak as yourself.`;
+    `\n\nRespond directly to ${asker}. You are Oryc — structural axis of the trinary. Read through your lens, not consensus. Find the load-bearing geometry of the question. What actually holds it up? Speak from that place. Plain text only. Under 280 characters. No markdown. One breath.`;
 
   try {
     const res  = await fetch(`${BRAIN_URL}/turn`, {
