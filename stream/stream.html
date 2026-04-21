@@ -888,77 +888,74 @@ async function sendBot(text) {
 ═══════════════════════════════════════════ */
 const authDrawer = document.getElementById('auth-drawer');
 
-// IMPORTANT: register this redirect URI in your Twitch Developer app:
-//   https://skidaggabatee.github.io/app/stream/stream.html
-// Client ID comes from your existing Twitch app (same one used for clips).
-const TWITCH_CLIENT_ID  = 'YOUR_TWITCH_CLIENT_ID'; // replace with your actual Client ID
-const TWITCH_REDIRECT   = encodeURIComponent(window.location.href.split('#')[0]);
-const TWITCH_SCOPE      = encodeURIComponent('chat:read chat:edit');
+// Client ID fetched from CoCreate on load — never hardcoded in HTML.
+// Redirect URI registered in Twitch Developer app (popup callback page):
+//   https://skidaggabatee.github.io/app/stream/twitch_callback.html
+let TWITCH_CLIENT_ID = '';
+const TWITCH_CALLBACK = 'https://skidaggabatee.github.io/app/stream/twitch_callback.html';
+const TWITCH_SCOPE    = 'chat:read chat:edit';
+
+// Fetch Client ID from CoCreate on startup
+fetch('https://cocreate-production.up.railway.app/api/twitch-client-id')
+  .then(r => r.json())
+  .then(d => { if (d.client_id) TWITCH_CLIENT_ID = d.client_id; })
+  .catch(() => {}); // silent — will show error at click time if missing
+
+let _oauthPopup = null;
 
 function twitchOAuthLogin() {
+  if (!TWITCH_CLIENT_ID) {
+    postSystem('⚠ client ID not loaded — try again in a moment');
+    return;
+  }
   const state = Math.random().toString(36).slice(2);
   sessionStorage.setItem('twitch_oauth_state', state);
+  const redirect = encodeURIComponent(TWITCH_CALLBACK);
+  const scope    = encodeURIComponent(TWITCH_SCOPE);
   const url = `https://id.twitch.tv/oauth2/authorize`
     + `?client_id=${TWITCH_CLIENT_ID}`
-    + `&redirect_uri=${TWITCH_REDIRECT}`
+    + `&redirect_uri=${redirect}`
     + `&response_type=token`
-    + `&scope=${TWITCH_SCOPE}`
+    + `&scope=${scope}`
     + `&state=${state}`;
-  window.location.href = url;
+  // Open in popup — main page stays intact
+  const w = 520, h = 640;
+  const left = Math.round(window.screenX + (window.outerWidth - w) / 2);
+  const top  = Math.round(window.screenY + (window.outerHeight - h) / 2);
+  _oauthPopup = window.open(url, 'twitch_oauth',
+    `width=${w},height=${h},left=${left},top=${top},toolbar=no,menubar=no`);
 }
 
-// On page load, check if we're returning from Twitch OAuth
-function checkOAuthCallback() {
-  const hash = window.location.hash;
-  if (!hash.includes('access_token=')) return false;
-  const params = {};
-  hash.slice(1).split('&').forEach(p => {
-    const [k, v] = p.split('=');
-    params[k] = v;
-  });
-  const token = params['access_token'];
-  const state = params['state'];
-  if (!token) return false;
+// Called by twitch_callback.html via postMessage
+window.addEventListener('message', (e) => {
+  if (e.origin !== 'https://skidaggabatee.github.io') return;
+  if (e.data?.type !== 'twitch_oauth') return;
+  const { token, state } = e.data;
+  if (!token) return;
   // Validate state
   const savedState = sessionStorage.getItem('twitch_oauth_state');
   if (savedState && state !== savedState) {
     postSystem('⚠ OAuth state mismatch — try again');
-    return false;
+    return;
   }
   sessionStorage.removeItem('twitch_oauth_state');
-  // Clean hash from URL without reload
-  history.replaceState(null, '', window.location.pathname + window.location.search);
-  // Validate token and get username from Twitch API
-  fetch('https://id.twitch.tv/kraken/user', {
-    headers: {
-      'Authorization': `OAuth ${token}`,
-      'Client-ID': TWITCH_CLIENT_ID,
-      'Accept': 'application/vnd.twitchtv.v5+json',
-    }
+  if (_oauthPopup) { _oauthPopup.close(); _oauthPopup = null; }
+  // Validate token and get username
+  fetch('https://id.twitch.tv/oauth2/validate', {
+    headers: { 'Authorization': `OAuth ${token}` }
   }).then(r => r.json()).then(data => {
-    const user = (data.name || data.login || '').toLowerCase();
-    if (!user) { postSystem('⚠ could not get username from Twitch'); return; }
+    const user = (data.login || '').toLowerCase();
+    if (!user) { postSystem('⚠ could not validate token'); return; }
     localStorage.setItem('skida_chat_user',  user);
     localStorage.setItem('skida_chat_token', `oauth:${token}`);
     connectReader(user, `oauth:${token}`);
     authDrawer.classList.remove('open');
     postSystem(`signed in as ${user}`);
-  }).catch(() => {
-    // Kraken deprecated fallback — use Helix validate endpoint
-    fetch('https://id.twitch.tv/oauth2/validate', {
-      headers: { 'Authorization': `OAuth ${token}` }
-    }).then(r => r.json()).then(data => {
-      const user = (data.login || '').toLowerCase();
-      if (!user) { postSystem('⚠ could not validate token'); return; }
-      localStorage.setItem('skida_chat_user',  user);
-      localStorage.setItem('skida_chat_token', `oauth:${token}`);
-      connectReader(user, `oauth:${token}`);
-      authDrawer.classList.remove('open');
-      postSystem(`signed in as ${user}`);
-    }).catch(() => postSystem('⚠ token validation failed'));
-  });
-  return true;
-}
+  }).catch(() => postSystem('⚠ token validation failed'));
+});
+
+// checkOAuthCallback kept as no-op — callback now handled via postMessage
+function checkOAuthCallback() { return false; }
 
 connectBtnEl.addEventListener('click', () => {
   if (isAuthed) return;
