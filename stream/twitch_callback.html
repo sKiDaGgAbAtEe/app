@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Signing in…</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  height:100%;background:#07100a;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Lato',sans-serif;color:rgba(255,255,255,0.7);
+}
+.msg{text-align:center;font-size:13px;letter-spacing:0.5px}
+.symbol{font-size:22px;color:#9b7fd4;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="msg">
+  <div class="symbol">◈</div>
+  <div id="status">Signing in…</div>
+</div>
+<script>
+// Parse token from hash
+const params = {};
+window.location.hash.slice(1).split('&').forEach(p => {
+  const [k, v] = p.split('=');
+  if (k) params[k] = v;
+});
+
+const token = params['access_token'];
+const state = params['state'];
+
+if (token) {
+  // Send token back to the opener via postMessage
+  if (window.opener && !window.opener.closed) {
+    window.opener.postMessage(
+      { type: 'twitch_oauth', token, state },
+      'https://skidaggabatee.github.io'
+    );
+    document.getElementById('status').textContent = 'Signed in — closing…';
+    setTimeout(() => window.close(), 800);
+  } else {
+    document.getElementById('status').textContent = 'Done — you can close this tab.';
+  }
+} else {
+  const error = params['error_description']
+    ? decodeURIComponent(params['error_description'].replace(/\+/g, ' '))
+    : (params['error'] || 'unknown error');
+  document.getElementById('status').textContent = `Sign-in failed: ${error}`;
+}
+</script>
+</body>
+</html>
