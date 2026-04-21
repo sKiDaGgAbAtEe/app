@@ -302,6 +302,20 @@
     }
     #auth-drawer p { font-size: 10.5px; color: var(--muted); line-height: 1.65; margin-bottom: 10px; }
 
+    .auth-field { margin-bottom: 8px; }
+    .auth-field label {
+      display: block; font-size: 8.5px; letter-spacing: 1.8px; text-transform: uppercase;
+      color: rgba(255,255,255,0.25); margin-bottom: 4px;
+    }
+    .auth-field input {
+      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; padding: 8px 11px; color: #fff;
+      font-family: 'Lato', sans-serif; font-size: 11.5px; outline: none;
+      transition: border-color 0.2s; box-sizing: border-box;
+    }
+    .auth-field input:focus { border-color: rgba(255,180,60,0.3); }
+    .auth-field input::placeholder { color: rgba(255,255,255,0.18); }
+
     .auth-actions { display: flex; gap: 8px; padding: 10px 0 14px; }
     .auth-save-btn {
       flex: 1; padding: 8px; border-radius: 20px; cursor: pointer;
@@ -310,11 +324,6 @@
       color: rgba(255,210,120,0.85); transition: all 0.2s;
     }
     .auth-save-btn:hover { background: rgba(255,180,60,0.22); }
-    #auth-twitch-btn {
-      background: rgba(145,70,255,0.15); border-color: rgba(145,70,255,0.4);
-      color: rgba(200,170,255,0.9);
-    }
-    #auth-twitch-btn:hover { background: rgba(145,70,255,0.28); }
     .auth-cancel-btn {
       flex: 1; padding: 8px; border-radius: 20px; cursor: pointer;
       font-family: 'Lato', sans-serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
@@ -322,6 +331,9 @@
       color: var(--muted); transition: all 0.2s;
     }
     .auth-cancel-btn:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
+    .auth-link-row { font-size: 9.5px; color: rgba(255,255,255,0.22); text-align: center; padding-bottom: 12px; }
+    .auth-link-row a { color: rgba(255,180,60,0.5); text-decoration: none; }
+    .auth-link-row a:hover { color: rgba(255,180,60,0.8); }
 
     /* disconnect link */
     #disconnect-btn {
@@ -790,7 +802,8 @@ function connectReader(user, token) {
                          : -1;
         if (triggerIdx !== -1) {
           const question = body.slice(triggerIdx + 6).trim();
-          if (question) callOrycl(question, name);
+          // Skip if sendChat already fired this trigger (own message path)
+          if (question && !recentlyTriggered.has(body)) callOrycl(question, name);
         }
 
         addToBuffer(name, body);
@@ -831,6 +844,8 @@ function connectReader(user, token) {
 
 // Track messages sent via UI to suppress IRC echo (not browser chat)
 const recentlySent = new Set();
+// Track @orycl triggers fired from sendChat to block duplicate IRC-path calls
+const recentlyTriggered = new Set();
 
 function sendChat(text) {
   if (!readerWs || readerWs.readyState !== WebSocket.OPEN || !isAuthed) return;
@@ -842,14 +857,19 @@ function sendChat(text) {
   postMsg({ name: readerUser, color: '#ffb43c', badges: [], body: text });
   // Add to vibe buffer
   addToBuffer(readerUser, text);
-  // Trigger Orycl directly from UI send
+  // @orycl trigger for sender's own messages — IRC echo is suppressed so
+  // we fire directly here, but track it so any duplicate IRC path is blocked.
   const lower = text.toLowerCase();
   const triggerIdx = lower.indexOf('@orycl') !== -1 ? lower.indexOf('@orycl')
                    : lower.indexOf('@0rycl') !== -1 ? lower.indexOf('@0rycl')
                    : -1;
   if (triggerIdx !== -1) {
     const question = text.slice(triggerIdx + 6).trim();
-    if (question) callOrycl(question, readerUser);
+    if (question) {
+      recentlyTriggered.add(text);
+      setTimeout(() => recentlyTriggered.delete(text), 6000);
+      callOrycl(question, readerUser);
+    }
   }
 }
 
@@ -889,7 +909,7 @@ async function sendBot(text) {
 const authDrawer = document.getElementById('auth-drawer');
 
 // Client ID fetched from CoCreate on load — never hardcoded in HTML.
-// Redirect URI registered in Twitch Developer app (popup callback page):
+// Redirect URI — must be registered in Twitch Developer app:
 //   https://skidaggabatee.github.io/app/stream/twitch_callback.html
 let TWITCH_CLIENT_ID = '';
 const TWITCH_CALLBACK = 'https://skidaggabatee.github.io/app/stream/twitch_callback.html';
@@ -928,7 +948,7 @@ function twitchOAuthLogin() {
 
 // Called by twitch_callback.html via postMessage
 window.addEventListener('message', (e) => {
-  if (e.origin !== 'https://skidaggabatee.github.io') return;
+  if (!['https://skidaggabatee.github.io'].includes(e.origin)) return;
   if (e.data?.type !== 'twitch_oauth') return;
   const { token, state } = e.data;
   if (!token) return;
@@ -1019,7 +1039,7 @@ window.addEventListener('load', () => {
   initPlayer();
   load7TV();
 
-  // Check if returning from Twitch OAuth — handle before anything else
+  // Check if returning from Twitch OAuth popup callback
   if (checkOAuthCallback()) return;
 
   // Load saved viewer creds — connect authed if present, anon if not
