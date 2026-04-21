@@ -794,17 +794,8 @@ function connectReader(user, token) {
         // Skip bot messages
         if (botUser && (name.toLowerCase() === botUser || name.toLowerCase() === '0rycl' || name.toLowerCase() === 'orycl')) return;
 
-        // Suppress IRC echo of messages sent via UI input
-        // Exception: @orycl messages are NOT suppressed — we let them come back
-        // through IRC so the trigger fires exactly once for everyone including sender.
+        // @orycl / @0rycl trigger — fires for all incoming messages, one unified path
         const lower = body.toLowerCase();
-        const hasOryclMention = lower.includes('@orycl') || lower.includes('@0rycl');
-        if (readerUser && name.toLowerCase() === readerUser.toLowerCase() && recentlySent.has(body)) {
-          recentlySent.delete(body);
-          if (!hasOryclMention) return; // suppress echo unless it's an @orycl message
-        }
-
-        // @orycl / @0rycl trigger — single trigger point for everyone
         const triggerIdx = lower.indexOf('@orycl') !== -1 ? lower.indexOf('@orycl')
                          : lower.indexOf('@0rycl') !== -1 ? lower.indexOf('@0rycl')
                          : -1;
@@ -849,22 +840,13 @@ function connectReader(user, token) {
   };
 }
 
-// Track messages sent via UI to suppress IRC echo (not browser chat)
-const recentlySent = new Set();
-// Track @orycl triggers fired from sendChat to block duplicate IRC-path calls
-const recentlyTriggered = new Set();
+// recentlySent removed — all messages flow through IRC for unified trigger handling
 
 function sendChat(text) {
   if (!readerWs || readerWs.readyState !== WebSocket.OPEN || !isAuthed) return;
   readerWs.send(`PRIVMSG #${CHANNEL} :${text}`);
-  // Mark as sent so IRC echo gets suppressed
-  recentlySent.add(text);
-  setTimeout(() => recentlySent.delete(text), 5000);
-  // Render locally immediately
-  postMsg({ name: readerUser, color: '#ffb43c', badges: [], body: text });
-  // Add to vibe buffer
-  addToBuffer(readerUser, text);
-  // @orycl trigger handled by IRC handler — fires when echo returns from Twitch
+  // Don't render locally — let the IRC echo handle display and triggering
+  // so there's one unified path for all messages including your own
 }
 
 /* ═══════════════════════════════════════════
