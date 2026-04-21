@@ -429,8 +429,8 @@ const PARENT     = ['skidaggabatee.github.io', 'localhost', '127.0.0.1'];
 const BRAIN_URL  = 'https://divine-playfulness-production-eabb.up.railway.app';
 const COCREATE_URL = 'https://cocreate-production.up.railway.app';
 
-const GLOBAL_CD_MS = 0;
-const USER_CD_MS   = 0;
+const GLOBAL_CD_MS = 8000;
+const USER_CD_MS   = 15000;
 const BUFFER_MAX   = 20;
 const MAX_MSGS     = 200;
 
@@ -596,13 +596,16 @@ function setOrycState(s) {
    ORYC BRAIN CALL
 ═══════════════════════════════════════════ */
 let oryclCooldown   = 0;
+let oryclLocked     = false;   // synchronous lock — blocks re-entry before await
 const userCooldowns = new Map();
 
 async function callOrycl(question, asker) {
+  if (oryclLocked) return;
   const now = Date.now();
   if (now < oryclCooldown) return;
   if ((now - (userCooldowns.get(asker) || 0)) < USER_CD_MS) return;
 
+  oryclLocked   = true;   // set synchronously before any await
   oryclCooldown = now + GLOBAL_CD_MS;
   userCooldowns.set(asker, now);
   setOrycState('thinking');
@@ -634,6 +637,8 @@ async function callOrycl(question, asker) {
     postSystem('◈ offline');
     console.error('Orycl error:', err);
     setTimeout(() => setOrycState(''), 5000);
+  } finally {
+    oryclLocked = false;   // always release
   }
 }
 
