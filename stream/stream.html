@@ -302,20 +302,6 @@
     }
     #auth-drawer p { font-size: 10.5px; color: var(--muted); line-height: 1.65; margin-bottom: 10px; }
 
-    .auth-field { margin-bottom: 8px; }
-    .auth-field label {
-      display: block; font-size: 8.5px; letter-spacing: 1.8px; text-transform: uppercase;
-      color: rgba(255,255,255,0.25); margin-bottom: 4px;
-    }
-    .auth-field input {
-      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 8px; padding: 8px 11px; color: #fff;
-      font-family: 'Lato', sans-serif; font-size: 11.5px; outline: none;
-      transition: border-color 0.2s; box-sizing: border-box;
-    }
-    .auth-field input:focus { border-color: rgba(255,180,60,0.3); }
-    .auth-field input::placeholder { color: rgba(255,255,255,0.18); }
-
     .auth-actions { display: flex; gap: 8px; padding: 10px 0 14px; }
     .auth-save-btn {
       flex: 1; padding: 8px; border-radius: 20px; cursor: pointer;
@@ -324,6 +310,11 @@
       color: rgba(255,210,120,0.85); transition: all 0.2s;
     }
     .auth-save-btn:hover { background: rgba(255,180,60,0.22); }
+    #auth-twitch-btn {
+      background: rgba(145,70,255,0.15); border-color: rgba(145,70,255,0.4);
+      color: rgba(200,170,255,0.9);
+    }
+    #auth-twitch-btn:hover { background: rgba(145,70,255,0.28); }
     .auth-cancel-btn {
       flex: 1; padding: 8px; border-radius: 20px; cursor: pointer;
       font-family: 'Lato', sans-serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
@@ -331,9 +322,6 @@
       color: var(--muted); transition: all 0.2s;
     }
     .auth-cancel-btn:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
-    .auth-link-row { font-size: 9.5px; color: rgba(255,255,255,0.22); text-align: center; padding-bottom: 12px; }
-    .auth-link-row a { color: rgba(255,180,60,0.5); text-decoration: none; }
-    .auth-link-row a:hover { color: rgba(255,180,60,0.8); }
 
     /* disconnect link */
     #disconnect-btn {
@@ -343,101 +331,6 @@
     }
     #disconnect-btn:hover { color: rgba(255,100,100,0.7); }
     #disconnect-btn.show  { display: inline; }
-
-    /* ── BOT SETUP BUTTON ── */
-    #bot-setup-btn {
-      background: var(--oryc-dim); border: 1px solid var(--oryc-border);
-      border-radius: 20px; color: var(--oryc);
-      font-family: 'Lato', sans-serif; font-size: 9px; letter-spacing: 1.6px;
-      text-transform: uppercase; padding: 4px 11px; cursor: pointer;
-      transition: all 0.2s; flex-shrink: 0;
-    }
-    #bot-setup-btn:hover { background: rgba(155,127,212,0.22); }
-    #bot-setup-btn.bot-active {
-      border-color: rgba(62,207,106,0.3); color: rgba(62,207,106,0.8);
-      background: rgba(62,207,106,0.07);
-    }
-
-    /* ── BOT DRAWER ── */
-    #bot-drawer {
-      position: fixed; top: 50%; left: 50%; z-index: 200;
-      transform: translate(-50%, -50%) scale(0.95);
-      width: min(90vw, 340px);
-      background: rgba(8,12,10,0.98); border: 1px solid var(--oryc-border);
-      border-radius: 16px; padding: 22px 20px;
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.25s ease, transform 0.25s ease;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 30px rgba(155,127,212,0.06);
-      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-    }
-    #bot-drawer.open {
-      opacity: 1; pointer-events: all;
-      transform: translate(-50%, -50%) scale(1);
-    }
-    #bot-drawer-overlay {
-      position: fixed; inset: 0; z-index: 199;
-      background: rgba(0,0,0,0.6);
-      opacity: 0; pointer-events: none; transition: opacity 0.25s;
-      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-    }
-    #bot-drawer-overlay.open { opacity: 1; pointer-events: all; }
-
-    #bot-drawer h3 {
-      font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 2.5px;
-      color: var(--oryc); margin-bottom: 6px; text-transform: uppercase;
-      text-shadow: 0 0 14px var(--oryc-glow);
-    }
-    #bot-drawer p { font-size: 10.5px; color: var(--muted); line-height: 1.65; margin-bottom: 12px; }
-
-    .bot-field { margin-bottom: 10px; }
-    .bot-field label {
-      display: block; font-size: 8.5px; letter-spacing: 1.8px; text-transform: uppercase;
-      color: rgba(255,255,255,0.25); margin-bottom: 4px;
-    }
-    .bot-field input {
-      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 8px; padding: 8px 11px; color: #fff;
-      font-family: 'Lato', sans-serif; font-size: 11.5px; outline: none;
-      transition: border-color 0.2s; box-sizing: border-box;
-    }
-    .bot-field input:focus { border-color: var(--oryc-border); }
-    .bot-field input::placeholder { color: rgba(255,255,255,0.18); }
-
-    #bot-status-row {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
-      font-size: 10px; color: var(--muted); min-height: 18px;
-    }
-    #bot-status-dot {
-      width: 6px; height: 6px; border-radius: 50%; background: #333; flex-shrink: 0; transition: background 0.4s;
-    }
-    #bot-status-dot.active { background: #3ecf6a; box-shadow: 0 0 6px #3ecf6a; }
-
-    .bot-actions { display: flex; gap: 8px; margin-top: 4px; }
-    .bot-save-btn {
-      flex: 1; padding: 9px; border-radius: 20px; cursor: pointer;
-      font-family: 'Lato', sans-serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
-      background: var(--oryc-dim); border: 1px solid var(--oryc-border);
-      color: rgba(200,180,240,0.9); transition: all 0.2s;
-    }
-    .bot-save-btn:hover { background: rgba(155,127,212,0.25); }
-    .bot-close-btn {
-      flex: 1; padding: 9px; border-radius: 20px; cursor: pointer;
-      font-family: 'Lato', sans-serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
-      background: transparent; border: 1px solid rgba(255,255,255,0.09);
-      color: var(--muted); transition: all 0.2s;
-    }
-    .bot-close-btn:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
-    .bot-clear-btn {
-      width: 100%; margin-top: 8px; padding: 7px; border-radius: 20px; cursor: pointer;
-      font-family: 'Lato', sans-serif; font-size: 8.5px; letter-spacing: 1.8px; text-transform: uppercase;
-      background: transparent; border: 1px solid rgba(255,80,80,0.15);
-      color: rgba(255,100,100,0.4); transition: all 0.2s; display: none;
-    }
-    .bot-clear-btn:hover { border-color: rgba(255,80,80,0.35); color: rgba(255,100,100,0.7); }
-    .bot-clear-btn.show { display: block; }
-    .bot-link-row { font-size: 9px; color: rgba(255,255,255,0.2); text-align: center; margin-top: 10px; }
-    .bot-link-row a { color: rgba(155,127,212,0.5); text-decoration: none; }
-    .bot-link-row a:hover { color: var(--oryc); }
 
     @media (max-width: 600px) {
       #body { flex-direction: column; }
@@ -460,43 +353,11 @@
       <div id="oryc-dot"></div>
       <span id="oryc-label">◈ Orycl</span>
     </div>
-    <button id="bot-setup-btn" title="Orycl bot settings">◈ Bot</button>
     <div id="live-badge">Live</div>
   </div>
 
-  <!-- BOT DRAWER OVERLAY -->
-  <div id="bot-drawer-overlay"></div>
 
-  <!-- BOT DRAWER -->
-  <div id="bot-drawer">
-    <h3>◈ Orycl in Chat</h3>
-    <p>Orycl's bot runs server-side. Enter the bot username (for echo filtering) and the shared secret you set in Railway env vars.</p>
-
-    <div id="bot-status-row">
-      <div id="bot-status-dot"></div>
-      <span id="bot-status-text">Not connected</span>
-    </div>
-
-    <div class="bot-field">
-      <label>Bot Username</label>
-      <input type="text" id="bot-user-input" placeholder="e.g. 0rycl" autocomplete="off" spellcheck="false" />
-    </div>
-    <div class="bot-field">
-      <label>Bot Secret  (TWITCH_BOT_SECRET from Railway)</label>
-      <input type="password" id="bot-token-input" placeholder="your shared secret" autocomplete="off" />
-    </div>
-    <div class="bot-actions">
-      <button class="bot-save-btn" id="bot-save-btn">Save &amp; Activate</button>
-      <button class="bot-close-btn" id="bot-close-btn">Close</button>
-    </div>
-    <button class="bot-clear-btn" id="bot-clear-btn">Remove bot credentials</button>
-    <div class="bot-link-row">
-      Token for bot account at <a href="https://twitchapps.com/tmi/" target="_blank" rel="noopener">twitchapps.com/tmi</a>
-    </div>
-  </div>
-
-  <!-- BODY -->
-  <div id="body">
+  <!-- BODY -->  <div id="body">
 
     <!-- STREAM PLAYER -->
     <div id="stream-col">
@@ -533,21 +394,12 @@
       <!-- auth drawer — slides up from bottom -->
       <div id="auth-drawer">
         <h3>Connect to Chat</h3>
-        <p>Enter your Twitch credentials to send messages. Saved locally — never shared.</p>
-        <div class="auth-field">
-          <label>Twitch Username</label>
-          <input type="text" id="auth-user" placeholder="your username" autocomplete="off" spellcheck="false" />
-        </div>
-        <div class="auth-field">
-          <label>OAuth Token</label>
-          <input type="password" id="auth-token" placeholder="oauth:xxxxxxxxxxxxxxxx" autocomplete="off" />
-        </div>
+        <p>Sign in with Twitch to send messages and interact with chat.</p>
         <div class="auth-actions">
-          <button class="auth-save-btn" id="auth-save">Save &amp; Connect</button>
+          <button class="auth-save-btn" id="auth-twitch-btn" onclick="twitchOAuthLogin()">
+            Sign in with Twitch
+          </button>
           <button class="auth-cancel-btn" id="auth-cancel">Cancel</button>
-        </div>
-        <div class="auth-link-row">
-          Get your token at <a href="https://twitchapps.com/tmi/" target="_blank" rel="noopener">twitchapps.com/tmi</a>
         </div>
       </div>
 
@@ -1030,35 +882,91 @@ async function sendBot(text) {
 }
 
 /* ═══════════════════════════════════════════
-   AUTH DRAWER
+   AUTH DRAWER — TWITCH OAUTH
+   Implicit grant flow — redirects to Twitch,
+   returns token in URL hash. No server needed.
 ═══════════════════════════════════════════ */
 const authDrawer = document.getElementById('auth-drawer');
 
+// IMPORTANT: register this redirect URI in your Twitch Developer app:
+//   https://skidaggabatee.github.io/app/stream/stream.html
+// Client ID comes from your existing Twitch app (same one used for clips).
+const TWITCH_CLIENT_ID  = 'YOUR_TWITCH_CLIENT_ID'; // replace with your actual Client ID
+const TWITCH_REDIRECT   = encodeURIComponent(window.location.href.split('#')[0]);
+const TWITCH_SCOPE      = encodeURIComponent('chat:read chat:edit');
+
+function twitchOAuthLogin() {
+  const state = Math.random().toString(36).slice(2);
+  sessionStorage.setItem('twitch_oauth_state', state);
+  const url = `https://id.twitch.tv/oauth2/authorize`
+    + `?client_id=${TWITCH_CLIENT_ID}`
+    + `&redirect_uri=${TWITCH_REDIRECT}`
+    + `&response_type=token`
+    + `&scope=${TWITCH_SCOPE}`
+    + `&state=${state}`;
+  window.location.href = url;
+}
+
+// On page load, check if we're returning from Twitch OAuth
+function checkOAuthCallback() {
+  const hash = window.location.hash;
+  if (!hash.includes('access_token=')) return false;
+  const params = {};
+  hash.slice(1).split('&').forEach(p => {
+    const [k, v] = p.split('=');
+    params[k] = v;
+  });
+  const token = params['access_token'];
+  const state = params['state'];
+  if (!token) return false;
+  // Validate state
+  const savedState = sessionStorage.getItem('twitch_oauth_state');
+  if (savedState && state !== savedState) {
+    postSystem('⚠ OAuth state mismatch — try again');
+    return false;
+  }
+  sessionStorage.removeItem('twitch_oauth_state');
+  // Clean hash from URL without reload
+  history.replaceState(null, '', window.location.pathname + window.location.search);
+  // Validate token and get username from Twitch API
+  fetch('https://id.twitch.tv/kraken/user', {
+    headers: {
+      'Authorization': `OAuth ${token}`,
+      'Client-ID': TWITCH_CLIENT_ID,
+      'Accept': 'application/vnd.twitchtv.v5+json',
+    }
+  }).then(r => r.json()).then(data => {
+    const user = (data.name || data.login || '').toLowerCase();
+    if (!user) { postSystem('⚠ could not get username from Twitch'); return; }
+    localStorage.setItem('skida_chat_user',  user);
+    localStorage.setItem('skida_chat_token', `oauth:${token}`);
+    connectReader(user, `oauth:${token}`);
+    authDrawer.classList.remove('open');
+    postSystem(`signed in as ${user}`);
+  }).catch(() => {
+    // Kraken deprecated fallback — use Helix validate endpoint
+    fetch('https://id.twitch.tv/oauth2/validate', {
+      headers: { 'Authorization': `OAuth ${token}` }
+    }).then(r => r.json()).then(data => {
+      const user = (data.login || '').toLowerCase();
+      if (!user) { postSystem('⚠ could not validate token'); return; }
+      localStorage.setItem('skida_chat_user',  user);
+      localStorage.setItem('skida_chat_token', `oauth:${token}`);
+      connectReader(user, `oauth:${token}`);
+      authDrawer.classList.remove('open');
+      postSystem(`signed in as ${user}`);
+    }).catch(() => postSystem('⚠ token validation failed'));
+  });
+  return true;
+}
+
 connectBtnEl.addEventListener('click', () => {
-  if (isAuthed) return; // already connected — clicking does nothing
-  // Pre-fill if saved
-  const saved = localStorage.getItem('skida_chat_user');
-  if (saved) document.getElementById('auth-user').value = saved;
+  if (isAuthed) return;
   authDrawer.classList.add('open');
-  setTimeout(() => document.getElementById('auth-user').focus(), 320);
 });
 
 document.getElementById('auth-cancel').addEventListener('click', () => {
   authDrawer.classList.remove('open');
-});
-
-document.getElementById('auth-save').addEventListener('click', () => {
-  const user  = document.getElementById('auth-user').value.trim();
-  const token = document.getElementById('auth-token').value.trim();
-  if (!user || !token) return;
-  localStorage.setItem('skida_chat_user',  user);
-  localStorage.setItem('skida_chat_token', token);
-  authDrawer.classList.remove('open');
-  connectReader(user, token);
-});
-
-document.getElementById('auth-token').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('auth-save').click();
 });
 
 discBtnEl.addEventListener('click', () => {
@@ -1105,100 +1013,7 @@ function initPlayer() {
   });
 }
 
-/* ═══════════════════════════════════════════
-   BOT DRAWER UI
-═══════════════════════════════════════════ */
-const botDrawer    = document.getElementById('bot-drawer');
-const botOverlay   = document.getElementById('bot-drawer-overlay');
-const botSetupBtn  = document.getElementById('bot-setup-btn');
-const botSaveBtn   = document.getElementById('bot-save-btn');
-const botCloseBtn  = document.getElementById('bot-close-btn');
-const botClearBtn  = document.getElementById('bot-clear-btn');
-const botStatusDot = document.getElementById('bot-status-dot');
-const botStatusTxt = document.getElementById('bot-status-text');
 
-function openBotDrawer() {
-  // Pre-fill if saved
-  const savedUser  = localStorage.getItem('skida_bot_user');
-  const savedToken = localStorage.getItem('skida_bot_token');
-  if (savedUser)  document.getElementById('bot-user-input').value  = savedUser;
-  if (savedToken) document.getElementById('bot-token-input').value = savedToken;
-  botClearBtn.className = (savedUser || savedToken) ? 'bot-clear-btn show' : 'bot-clear-btn';
-  updateBotStatusUI();
-  botDrawer.classList.add('open');
-  botOverlay.classList.add('open');
-  setTimeout(() => document.getElementById('bot-user-input').focus(), 260);
-}
-
-function closeBotDrawer() {
-  botDrawer.classList.remove('open');
-  botOverlay.classList.remove('open');
-}
-
-function updateBotStatusUI() {
-  if (botReady) {
-    botStatusDot.classList.add('active');
-    botStatusTxt.textContent = `Active as ${botUser}`;
-    botSetupBtn.classList.add('bot-active');
-    botSetupBtn.textContent = '◈ Active';
-  } else {
-    botStatusDot.classList.remove('active');
-    botStatusTxt.textContent = localStorage.getItem('skida_bot_user')
-      ? 'Connecting…'
-      : 'Not connected';
-    botSetupBtn.classList.remove('bot-active');
-    botSetupBtn.textContent = '◈ Bot';
-  }
-}
-
-botSetupBtn.addEventListener('click', openBotDrawer);
-botOverlay.addEventListener('click', closeBotDrawer);
-botCloseBtn.addEventListener('click', closeBotDrawer);
-
-botSaveBtn.addEventListener('click', () => {
-  const user   = document.getElementById('bot-user-input').value.trim();
-  const secret = document.getElementById('bot-token-input').value.trim();
-  if (!user || !secret) {
-    document.getElementById(user ? 'bot-token-input' : 'bot-user-input').focus();
-    return;
-  }
-  localStorage.setItem('skida_bot_user',   user);
-  localStorage.setItem('skida_bot_secret', secret);
-  botUser = user.toLowerCase();
-  closeBotDrawer();
-  // Verify connection by pinging /bot/say
-  fetch(`https://cocreate-production.up.railway.app/bot/say`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: '◈ orycl is here', secret })
-  }).then(r => r.json()).then(d => {
-    if (d.sent) {
-      botStatusDot.classList.add('active');
-      botStatusTxt.textContent = `Active as ${user}`;
-      botSetupBtn.classList.add('bot-active');
-      botSetupBtn.textContent = '◈ Active';
-      postSystem('◈ orycl bot active');
-    } else {
-      postSystem('◈ bot connected but not ready — check Railway env vars');
-    }
-  }).catch(() => postSystem('◈ could not reach bot endpoint'));
-});
-
-botClearBtn.addEventListener('click', () => {
-  if (!confirm('Remove Orycl bot settings?')) return;
-  localStorage.removeItem('skida_bot_user');
-  localStorage.removeItem('skida_bot_secret');
-  botUser = '0rycl';
-  document.getElementById('bot-user-input').value  = '';
-  document.getElementById('bot-token-input').value = '';
-  botClearBtn.className = 'bot-clear-btn';
-  updateBotStatusUI();
-  postSystem('◈ orycl bot settings cleared');
-});
-
-document.getElementById('bot-token-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') botSaveBtn.click();
-});
 
 /* ═══════════════════════════════════════════
    INIT
@@ -1207,25 +1022,16 @@ window.addEventListener('load', () => {
   initPlayer();
   load7TV();
 
-  // Bot runs server-side — just restore username for echo filtering
-  const savedBotUser = localStorage.getItem('skida_bot_user');
-  if (savedBotUser) {
-    botUser = savedBotUser.toLowerCase();
-    botSetupBtn.classList.add('bot-active');
-    botSetupBtn.textContent = '◈ Active';
-    botStatusDot.classList.add('active');
-    botStatusTxt.textContent = `Active as ${savedBotUser}`;
-  }
+  // Check if returning from Twitch OAuth — handle before anything else
+  if (checkOAuthCallback()) return;
 
   // Load saved viewer creds — connect authed if present, anon if not
   const savedUser  = localStorage.getItem('skida_chat_user');
   const savedToken = localStorage.getItem('skida_chat_token');
   if (savedUser && savedToken) {
-    document.getElementById('auth-user').value  = savedUser;
-    document.getElementById('auth-token').value = savedToken;
     connectReader(savedUser, savedToken);
   } else {
-    // Start anon reader to show chat — no reconnect loop
+    // Start anon reader to show chat while not signed in
     connectReader('', '');
   }
 });
