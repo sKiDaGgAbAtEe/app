@@ -794,21 +794,23 @@ function connectReader(user, token) {
         // Skip bot messages
         if (botUser && (name.toLowerCase() === botUser || name.toLowerCase() === '0rycl' || name.toLowerCase() === 'orycl')) return;
 
-        // Suppress IRC echo of messages sent via UI input — but allow browser chat through
+        // Suppress IRC echo of messages sent via UI input
+        // Exception: @orycl messages are NOT suppressed — we let them come back
+        // through IRC so the trigger fires exactly once for everyone including sender.
+        const lower = body.toLowerCase();
+        const hasOryclMention = lower.includes('@orycl') || lower.includes('@0rycl');
         if (readerUser && name.toLowerCase() === readerUser.toLowerCase() && recentlySent.has(body)) {
           recentlySent.delete(body);
-          return;
+          if (!hasOryclMention) return; // suppress echo unless it's an @orycl message
         }
 
-        // @orycl / @0rycl trigger
-        const lower = body.toLowerCase();
+        // @orycl / @0rycl trigger — single trigger point for everyone
         const triggerIdx = lower.indexOf('@orycl') !== -1 ? lower.indexOf('@orycl')
                          : lower.indexOf('@0rycl') !== -1 ? lower.indexOf('@0rycl')
                          : -1;
         if (triggerIdx !== -1) {
           const question = body.slice(triggerIdx + 6).trim();
-          // Skip if sendChat already fired this trigger (own message path)
-          if (question && !recentlyTriggered.has(body)) callOrycl(question, name);
+          if (question) callOrycl(question, name);
         }
 
         addToBuffer(name, body);
@@ -862,20 +864,7 @@ function sendChat(text) {
   postMsg({ name: readerUser, color: '#ffb43c', badges: [], body: text });
   // Add to vibe buffer
   addToBuffer(readerUser, text);
-  // @orycl trigger for sender's own messages — IRC echo is suppressed so
-  // we fire directly here, but track it so any duplicate IRC path is blocked.
-  const lower = text.toLowerCase();
-  const triggerIdx = lower.indexOf('@orycl') !== -1 ? lower.indexOf('@orycl')
-                   : lower.indexOf('@0rycl') !== -1 ? lower.indexOf('@0rycl')
-                   : -1;
-  if (triggerIdx !== -1) {
-    const question = text.slice(triggerIdx + 6).trim();
-    if (question) {
-      recentlyTriggered.add(text);
-      setTimeout(() => recentlyTriggered.delete(text), 6000);
-      callOrycl(question, readerUser);
-    }
-  }
+  // @orycl trigger handled by IRC handler — fires when echo returns from Twitch
 }
 
 /* ═══════════════════════════════════════════
