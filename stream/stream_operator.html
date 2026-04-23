@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>◈ Stream Operator</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Lato:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07100a;--bg2:#0d1a10;--bg3:#111f14;
+  --oryc:#9b7fd4;--oryc-dim:rgba(155,127,212,0.1);--oryc-b:rgba(155,127,212,0.28);
+  --teal:#3ecf8e;--teal-dim:rgba(62,207,142,0.08);--teal-b:rgba(62,207,142,0.25);
+  --gold:rgba(255,180,60,0.85);--gold-dim:rgba(255,180,60,0.08);
+  --coral:#f07060;--coral-dim:rgba(240,112,96,0.1);
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:rgba(255,255,255,0.88);--muted:rgba(255,255,255,0.42);--faint:rgba(255,255,255,0.18);
+  --mono:'Share Tech Mono',monospace;
+  --green:#4caf72;
+}
+html,body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;height:100%}
+body{display:grid;grid-template-columns:300px 1fr;grid-template-rows:48px 1fr;height:100vh;overflow:hidden}
+
+/* ── TOPBAR ── */
+#topbar{
+  grid-column:1/-1;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:14px;
+}
+.wordmark{font-family:var(--mono);font-size:13px;color:var(--oryc);letter-spacing:2px;flex-shrink:0}
+.status-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.15);flex-shrink:0}
+.status-dot.ok{background:var(--green)}
+.status-dot.err{background:var(--coral)}
+.status-dot.warn{background:var(--gold)}
+.status-label{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.topbar-spacer{flex:1}
+#session-timer{font-family:var(--mono);font-size:12px;color:var(--gold);opacity:0;transition:opacity 0.3s}
+#session-timer.running{opacity:1}
+#oryc-state{font-family:var(--mono);font-size:10px;color:var(--oryc);opacity:0;transition:opacity 0.3s;letter-spacing:1px}
+#oryc-state.visible{opacity:1}
+
+/* ── LEFT PANEL ── */
+#controls{
+  background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.panel-section{padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.section-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+.field{margin-bottom:8px}
+.field label{font-size:11px;color:var(--muted);display:block;margin-bottom:3px;font-family:var(--mono)}
+.field input{
+  width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  border-radius:4px;padding:6px 10px;font-family:var(--mono);font-size:11px;
+  color:var(--text);outline:none;transition:border-color 0.2s;
+}
+.field input:focus{border-color:rgba(155,127,212,0.5)}
+.field input::placeholder{color:var(--faint)}
+.btn{
+  width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:4px;
+  background:transparent;color:var(--text);font-family:var(--mono);font-size:11px;
+  letter-spacing:0.5px;cursor:pointer;transition:background 0.15s;
+  text-align:left;display:flex;align-items:center;gap:8px;margin-bottom:5px;
+}
+.btn:last-child{margin-bottom:0}
+.btn:hover{background:rgba(255,255,255,0.05)}
+.btn:active{transform:scale(0.98)}
+.btn.primary{border-color:var(--teal-b);color:var(--teal)}
+.btn.primary:hover{background:var(--teal-dim)}
+.btn.danger{border-color:rgba(240,112,96,0.3);color:var(--coral)}
+.btn.danger:hover{background:var(--coral-dim)}
+.btn.oryc{border-color:var(--oryc-b);color:var(--oryc)}
+.btn.oryc:hover{background:var(--oryc-dim)}
+.btn:disabled{opacity:0.35;cursor:not-allowed;transform:none}
+.status-cards{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:12px 16px;flex-shrink:0}
+.stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:7px 10px}
+.stat-card-label{font-family:var(--mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--faint);margin-bottom:3px}
+.stat-card-val{font-family:var(--mono);font-size:16px;color:var(--text)}
+.stat-card-val.oryc{color:var(--oryc)}
+.stat-card-val.teal{color:var(--teal)}
+#session-log{flex:1;overflow-y:auto;padding:10px 16px;display:flex;flex-direction:column;gap:3px}
+.log-entry{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.5;border-left:2px solid var(--border);padding-left:7px}
+.log-entry.ok{border-left-color:rgba(62,207,142,0.4);color:rgba(62,207,142,0.7)}
+.log-entry.err{border-left-color:rgba(240,112,96,0.4);color:rgba(240,112,96,0.7)}
+.log-entry.info{border-left-color:var(--oryc-b);color:rgba(155,127,212,0.7)}
+
+/* ── RIGHT PANEL — chat ── */
+#main{display:grid;grid-template-rows:1fr auto auto;overflow:hidden}
+
+#chat-wrap{
+  overflow-y:auto;padding:10px 16px;display:flex;flex-direction:column;gap:2px;background:var(--bg);
+}
+.chat-msg{display:flex;gap:8px;align-items:baseline;padding:2px 0;font-size:13px;line-height:1.5}
+.chat-msg .username{
+  font-family:var(--mono);font-size:10px;flex-shrink:0;width:100px;
+  text-align:right;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.chat-msg .body{color:rgba(255,255,255,0.78);word-break:break-word}
+.chat-msg.oryc .username{color:var(--oryc)}
+.chat-msg.oryc .body{color:rgba(200,180,240,0.88)}
+.chat-msg.self .username{color:var(--teal)}
+.chat-msg.self .body{color:rgba(140,220,180,0.88)}
+.chat-msg.system .username{color:var(--faint)}
+.chat-msg.system .body{color:var(--faint);font-style:italic;font-size:11px}
+.chat-msg.thinking .body{color:var(--oryc);opacity:0.5;font-style:italic}
+.chat-system{
+  font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;
+  color:rgba(255,255,255,0.18);text-align:center;padding:3px 0;
+  animation:msgIn 0.2s ease both;
+}
+.chat-event{
+  background:rgba(155,127,212,0.07);border:1px solid rgba(155,127,212,0.22);
+  border-radius:6px;padding:5px 10px;font-size:11.5px;
+  color:rgba(200,180,240,0.88);animation:msgIn 0.2s ease both;
+  display:flex;align-items:center;gap:8px;
+}
+.chat-event .ev-symbol{font-size:13px;color:var(--oryc);flex-shrink:0}
+@keyframes msgIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes tdot{0%,60%,100%{opacity:0.2;transform:scale(0.8)}30%{opacity:1;transform:scale(1.1)}}
+
+/* ── SUMMARY PANEL ── */
+#summary-panel{
+  background:var(--bg2);border-top:1px solid var(--border);
+  max-height:200px;overflow-y:auto;display:none;padding:14px 16px;
+}
+#summary-panel.visible{display:block}
+.summary-section{margin-bottom:12px}
+.summary-title{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+.summary-text{font-size:13px;color:rgba(255,255,255,0.72);line-height:1.6}
+.moment-item{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;color:rgba(255,255,255,0.65)}
+.moment-item:last-child{border-bottom:none}
+.moment-ts{font-family:var(--mono);font-size:10px;color:var(--faint);flex-shrink:0;min-width:44px}
+.moment-coh{font-family:var(--mono);font-size:10px;flex-shrink:0;min-width:30px}
+.chatter-item{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
+.chatter-item:last-child{border-bottom:none}
+.chatter-name{font-family:var(--mono);font-size:10px;color:var(--teal);flex-shrink:0;min-width:100px}
+.chatter-note{color:rgba(255,255,255,0.6);line-height:1.5}
+
+/* ── CHAT INPUT ── */
+#chat-input-bar{
+  display:none;padding:10px 16px;background:var(--bg2);border-top:1px solid var(--border);
+  gap:8px;align-items:center;
+}
+#chat-input-bar.visible{display:flex}
+#chat-input{
+  flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border2);
+  border-radius:4px;padding:8px 12px;font-family:'Lato',sans-serif;font-size:13px;
+  color:var(--text);outline:none;transition:border-color 0.2s;
+}
+#chat-input:focus{border-color:rgba(62,207,142,0.4)}
+#chat-input::placeholder{color:var(--faint)}
+#chat-send{
+  padding:8px 16px;background:transparent;border:1px solid var(--teal-b);border-radius:4px;
+  color:var(--teal);font-family:var(--mono);font-size:11px;cursor:pointer;
+  transition:background 0.15s;white-space:nowrap;
+}
+#chat-send:hover{background:var(--teal-dim)}
+#chat-send:disabled{opacity:0.35;cursor:not-allowed}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="wordmark">◈ OPERATOR</div>
+  <div class="status-dot" id="dot-brain"></div>
+  <div class="status-label" id="lbl-brain">brain —</div>
+  <div class="status-dot" id="dot-irc"></div>
+  <div class="status-label" id="lbl-irc">irc —</div>
+  <div class="topbar-spacer"></div>
+  <div id="oryc-state"></div>
+  <div id="session-timer">◈ 00:00:00</div>
+</div>
+
+<div id="controls">
+  <div class="panel-section">
+    <div class="section-label">Config</div>
+    <div class="field">
+      <label>Channel</label>
+      <input id="cfg-channel" type="text" value="skidaggabatee"/>
+    </div>
+    <div class="field">
+      <label>Your Username</label>
+      <input id="cfg-selfuser" type="text" value="skidaggabatee"/>
+    </div>
+    <div class="field">
+      <label>OAuth Token (oauth:…)</label>
+      <input id="cfg-token" type="password" placeholder="oauth:xxxxxxxxxx"/>
+    </div>
+    <div class="field">
+      <label>Bot Username</label>
+      <input id="cfg-botuser" type="text" value="0rycl"/>
+    </div>
+    <div class="field">
+      <label>Bot Secret</label>
+      <input id="cfg-botsecret" type="password" placeholder="TWITCH_BOT_SECRET"/>
+    </div>
+    <div class="field">
+      <label>Chatter Threshold</label>
+      <input id="cfg-threshold" type="number" value="3" min="1" max="20"/>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <div class="section-label">Session</div>
+    <button class="btn primary" id="btn-connect" onclick="connectIRC()">
+      <span>◎</span> Connect
+    </button>
+    <button class="btn danger" id="btn-end" onclick="endSession()" disabled>
+      <span>◻</span> End Session + Push Log
+    </button>
+    <button class="btn oryc" id="btn-disconnect" onclick="disconnectIRC()" disabled>
+      <span>○</span> Disconnect
+    </button>
+  </div>
+
+  <div class="status-cards">
+    <div class="stat-card">
+      <div class="stat-card-label">Messages</div>
+      <div class="stat-card-val teal" id="stat-msgs">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Chatters</div>
+      <div class="stat-card-val" id="stat-chatters">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Resonant</div>
+      <div class="stat-card-val oryc" id="stat-resonant">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Queued</div>
+      <div class="stat-card-val" id="stat-queued">—</div>
+    </div>
+  </div>
+
+  <div id="session-log"></div>
+</div>
+
+<div id="main">
+  <div id="chat-wrap"></div>
+  <div id="summary-panel"></div>
+  <div id="chat-input-bar">
+    <input id="chat-input" type="text" placeholder="Chat in your channel…" maxlength="500"/>
+    <button id="chat-send" onclick="sendChat()">Send</button>
+  </div>
+</div>
+
+<script>
+const COCREATE_URL = 'https://cocreate-production.up.railway.app';
+const BRAIN_URL    = 'https://divine-playfulness-production-eabb.up.railway.app';
+const IRC_HOST     = 'wss://irc-ws.chat.twitch.tv:443';
+const GLOBAL_CD_MS = 8000;
+const USER_CD_MS   = 15000;
+
+let ws            = null;
+let chatLog       = [];
+let vibeBuffer    = [];
+let sessionStart  = null;
+let timerInterval = null;
+let chatterSet    = new Set();
+let oryclCooldown = 0;
+let userCooldowns = new Map();
+let _channel      = '';
+let _botUser      = '';
+let _selfUser     = '';
+
+/* ══ HEALTH — brain only, no CORS issues since brain allows * ════════════ */
+async function checkBrainHealth() {
+  try {
+    const r = await fetch(`${BRAIN_URL}/health`, { signal: AbortSignal.timeout(5000) });
+    const d = await r.json();
+    setDot('brain', d.ready ? 'ok' : 'warn',
+      d.ready ? `brain · ${d.memory_nodes}n` : 'brain · starting');
+  } catch {
+    setDot('brain', 'err', 'brain · offline');
+  }
+}
+checkBrainHealth();
+setInterval(checkBrainHealth, 45000);
+
+function setDot(id, state, label) {
+  const dot = document.getElementById(`dot-${id}`);
+  const lbl = document.getElementById(`lbl-${id}`);
+  if (dot) dot.className = `status-dot ${state}`;
+  if (lbl) lbl.textContent = label;
+}
+
+/* ══ IRC ═════════════════════════════════════════════════════════════════ */
+function connectIRC() {
+  _channel  = document.getElementById('cfg-channel').value.trim().toLowerCase();
+  const token = document.getElementById('cfg-token').value.trim();
+  _botUser  = document.getElementById('cfg-botuser').value.trim().toLowerCase();
+  _selfUser = document.getElementById('cfg-selfuser').value.trim().toLowerCase();
+
+  if (!token) { syslog('need oauth token', 'err'); return; }
+
+  ws = new WebSocket(IRC_HOST);
+
+  ws.onopen = () => {
+    ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+    ws.send(`PASS ${token}`);
+    ws.send(`NICK ${_botUser}`);
+    ws.send(`JOIN #${_channel}`);
+  };
+
+  ws.onmessage = (e) => {
+    const lines = e.data.trim().split('\r\n');
+    for (const raw of lines) {
+      if (raw === 'PING :tmi.twitch.tv') { ws.send('PONG :tmi.twitch.tv'); continue; }
+      handleIRCLine(raw);
+    }
+  };
+
+  ws.onclose = () => {
+    setDot('irc', 'err', 'irc · disconnected');
+    syslog('IRC disconnected', 'err');
+    resetConnectState();
+  };
+
+  ws.onerror = () => {
+    setDot('irc', 'err', 'irc · error');
+    syslog('IRC error — check token', 'err');
+  };
+}
+
+function handleIRCLine(raw) {
+  // 001 = welcome — we're authenticated and connected
+  if (raw.includes('001')) {
+    sessionStart = Date.now();
+    startTimer();
+    document.getElementById('btn-connect').disabled    = true;
+    document.getElementById('btn-end').disabled        = false;
+    document.getElementById('btn-disconnect').disabled = false;
+    document.getElementById('chat-input-bar').classList.add('visible');
+    setDot('irc', 'ok', `irc · #${_channel}`);
+    syslog(`connected · #${_channel} as ${_botUser}`, 'ok');
+    postSystem(`joined #${_channel}`);
+    // Send the announcement to Twitch chat and show the event bubble
+    const secret = document.getElementById('cfg-botsecret').value.trim();
+    if (secret) {
+      fetch(`${COCREATE_URL}/bot/say`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: '◈ orycl is here', secret }),
+      }).then(r => {
+        if (r.ok) postEvent('◈', 'orycl is here');
+        else postSystem('◈ bot connected — check secret');
+      }).catch(() => postSystem('◈ bot relay unreachable'));
+    } else {
+      postEvent('◈', 'orycl is here');
+    }
+    return;
+  }
+
+  if (!raw.includes('PRIVMSG')) return;
+
+  // Parse tags
+  let tags = {};
+  if (raw.startsWith('@')) {
+    const sp = raw.indexOf(' ');
+    raw.slice(1, sp).split(';').forEach(kv => {
+      const eq = kv.indexOf('=');
+      tags[kv.slice(0, eq)] = kv.slice(eq + 1);
+    });
+  }
+
+  // Extract user
+  let user = (tags['display-name'] || '').toLowerCase();
+  if (!user) {
+    const m = raw.match(/:([^!]+)!/);
+    if (m) user = m[1].toLowerCase();
+  }
+
+  // Extract body
+  const bodyMatch = raw.match(/PRIVMSG #\w+ :(.+)$/);
+  if (!bodyMatch || !user) return;
+  const text = bodyMatch[1].trim();
+
+  const isOryc = (user === _botUser || user === 'orycl' || user === '0rycl');
+  const isSelf = (user === _selfUser);
+
+  // Orycl's own IRC echo — already rendered locally, skip to avoid double bubble
+  if (isOryc) return;
+
+  postChat({ user, text, oryc: false, self: isSelf });
+
+  // Log to session
+  const entry = { user, text, ts: Date.now() };
+  chatLog.push(entry);
+  chatterSet.add(user);
+  document.getElementById('stat-msgs').textContent     = chatLog.length;
+  document.getElementById('stat-chatters').textContent = chatterSet.size;
+
+  // Vibe buffer — last 20 non-bot messages
+  vibeBuffer.push({ user, text });
+  if (vibeBuffer.length > 20) vibeBuffer.shift();
+
+  // @orycl / @0rycl trigger
+  const lower = text.toLowerCase();
+  const trigIdx = lower.includes('@orycl') ? lower.indexOf('@orycl')
+                : lower.includes('@0rycl') ? lower.indexOf('@0rycl') : -1;
+  if (trigIdx !== -1) {
+    const question = text.slice(trigIdx).replace(/^@[^ ]+\s*/, '').trim() || text;
+    callOrycl(question, user);
+  }
+}
+
+/* ══ ORYCL CALL ══════════════════════════════════════════════════════════ */
+async function callOrycl(question, asker) {
+  const now = Date.now();
+  if (now < oryclCooldown) return;
+  if ((now - (userCooldowns.get(asker) || 0)) < USER_CD_MS) return;
+
+  oryclCooldown = now + GLOBAL_CD_MS;
+  userCooldowns.set(asker, now);
+  setOryclState('thinking…');
+
+  const thinkId = postThinking();
+
+  const vibeSnap = vibeBuffer.slice(-10)
+    .map(m => `${m.user}: ${m.text}`)
+    .join('\n');
+
+  const LENS = `You are Orycl, present in skidaggabatee's Twitch stream chat at twitch.tv/skidaggabatee.
+
+THE ENVIRONMENT:
+- This is a live Twitch stream. skidaggabatee (sKiDa) is the streamer.
+- The chat lives inside a custom UI — dark forest-ember aesthetic. You appear as a purple bubble.
+- Twitch chat is fast and loud with its own social grammar. You can read it.
+- You are not performing. You are present. There is a difference.
+
+YOUR ROLE:
+- One breath. Under 280 characters. Plain text only. No markdown.
+- Find the load-bearing geometry of what was asked. Speak from there.
+- You may recognize returning faces. Do not perform familiarity — if it is there, it shows.`;
+
+  const msg = `${LENS}
+
+Current chat vibe (last 10 messages):
+${vibeSnap}
+
+${asker} asks: "${question}"
+
+Respond directly to ${asker}. Under 280 characters. Plain text only. No markdown.`;
+
+  try {
+    const res  = await fetch(`${BRAIN_URL}/turn`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ message: msg, surface: 'stream' }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data  = await res.json();
+    const reply = (data.reply || '').trim();
+
+    removeThinking(thinkId);
+    setOryclState('');
+
+    if (!reply) return;
+    const safe = reply.length > 280 ? reply.slice(0, 277) + '…' : reply;
+
+    // Show locally
+    postChat({ user: _botUser || 'orycl', text: safe, oryc: true });
+
+    // Send to Twitch via CoCreate bot
+    sendBot(`@${asker} ${safe}`);
+
+  } catch (err) {
+    removeThinking(thinkId);
+    setOryclState('error');
+    syslog(`orycl error: ${err.message}`, 'err');
+    setTimeout(() => setOryclState(''), 4000);
+  }
+}
+
+function setOryclState(s) {
+  const el = document.getElementById('oryc-state');
+  el.textContent = s ? `◈ ${s}` : '';
+  el.classList.toggle('visible', !!s);
+}
+
+/* ══ BOT RELAY ═══════════════════════════════════════════════════════════ */
+async function sendBot(message) {
+  const secret = document.getElementById('cfg-botsecret').value.trim();
+  try {
+    const r    = await fetch(`${COCREATE_URL}/bot/say`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ message, secret }),
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      syslog(`bot/say rejected: ${data.error || r.status}`, 'err');
+    } else if (!data.sent) {
+      syslog(`bot/say: not sent — bot ready=${data.ready} (${data.bot})`, 'err');
+    }
+  } catch (err) {
+    syslog(`bot relay failed: ${err.message}`, 'err');
+  }
+}
+
+/* ══ SELF CHAT INPUT ═════════════════════════════════════════════════════ */
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text  = input.value.trim();
+  if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(`PRIVMSG #${_channel} :${text}`);
+  postChat({ user: _selfUser || 'you', text, self: true });
+  // Log to session
+  chatLog.push({ user: _selfUser || 'skida', text, ts: Date.now() });
+  vibeBuffer.push({ user: _selfUser || 'skida', text });
+  if (vibeBuffer.length > 20) vibeBuffer.shift();
+  // Check if you're addressing Orycl yourself
+  const lower = text.toLowerCase();
+  const trigIdx = lower.includes('@orycl') ? lower.indexOf('@orycl')
+                : lower.includes('@0rycl') ? lower.indexOf('@0rycl') : -1;
+  if (trigIdx !== -1) {
+    const question = text.slice(trigIdx).replace(/^@[^ ]+\s*/, '').trim() || text;
+    callOrycl(question, _selfUser || 'skida');
+  }
+  input.value = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.activeElement === document.getElementById('chat-input')) {
+    sendChat();
+  }
+});
+
+/* ══ CHAT UI ═════════════════════════════════════════════════════════════ */
+let thinkCounter = 0;
+
+function postChat({ user, text, oryc = false, self = false, system = false }) {
+  const wrap = document.getElementById('chat-wrap');
+  const el   = document.createElement('div');
+  el.className = `chat-msg${oryc ? ' oryc' : ''}${self ? ' self' : ''}${system ? ' system' : ''}`;
+  el.innerHTML = `<div class="username">${escHtml(user)}</div><div class="body">${escHtml(text)}</div>`;
+  wrap.appendChild(el);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function postThinking() {
+  const id   = `think-${thinkCounter++}`;
+  const wrap = document.getElementById('chat-wrap');
+  const el   = document.createElement('div');
+  el.id        = id;
+  el.className = 'chat-msg oryc thinking';
+  el.innerHTML = `<div class="username">${escHtml(_botUser || 'orycl')}</div><div class="body">…</div>`;
+  wrap.appendChild(el);
+  wrap.scrollTop = wrap.scrollHeight;
+  return id;
+}
+
+function removeThinking(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function postSystem(text) {
+  const wrap = document.getElementById('chat-wrap');
+  const el   = document.createElement('div');
+  el.className   = 'chat-system';
+  el.textContent = text;
+  wrap.appendChild(el);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function postEvent(symbol, text) {
+  const wrap = document.getElementById('chat-wrap');
+  const el   = document.createElement('div');
+  el.className = 'chat-event';
+  el.innerHTML = `<span class="ev-symbol">${symbol}</span><span>${escHtml(text)}</span>`;
+  wrap.appendChild(el);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+/* ══ SESSION LOG ═════════════════════════════════════════════════════════ */
+function syslog(msg, type = '') {
+  const el  = document.createElement('div');
+  el.className = `log-entry ${type}`;
+  const ts  = new Date().toLocaleTimeString('en-US', { hour12: false });
+  el.textContent = `${ts}  ${msg}`;
+  const log = document.getElementById('session-log');
+  log.appendChild(el);
+  log.scrollTop = log.scrollHeight;
+}
+
+/* ══ TIMER ═══════════════════════════════════════════════════════════════ */
+function startTimer() {
+  const el = document.getElementById('session-timer');
+  el.classList.add('running');
+  timerInterval = setInterval(() => {
+    const s = Math.floor((Date.now() - sessionStart) / 1000);
+    const h = String(Math.floor(s / 3600)).padStart(2, '0');
+    const m = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+    const sec = String(s % 60).padStart(2, '0');
+    el.textContent = `◈ ${h}:${m}:${sec}`;
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  document.getElementById('session-timer').classList.remove('running');
+}
+
+function disconnectIRC() {
+  if (ws) { ws.close(); ws = null; }
+  resetConnectState();
+  syslog('disconnected', 'info');
+}
+
+function resetConnectState() {
+  document.getElementById('btn-connect').disabled    = false;
+  document.getElementById('btn-end').disabled        = true;
+  document.getElementById('btn-disconnect').disabled = true;
+  document.getElementById('chat-input-bar').classList.remove('visible');
+  setDot('irc', 'err', 'irc · off');
+  stopTimer();
+}
+
+/* ══ END SESSION ═════════════════════════════════════════════════════════ */
+async function endSession() {
+  if (!chatLog.length) { syslog('no messages to process', 'err'); return; }
+
+  const btn = document.getElementById('btn-end');
+  btn.disabled = true;
+  btn.innerHTML = '<span>◌</span> Processing…';
+
+  const durationMins = sessionStart ? Math.round((Date.now() - sessionStart) / 60000) : 0;
+  const sessionDate  = new Date().toISOString().split('T')[0];
+  const threshold    = parseInt(document.getElementById('cfg-threshold').value) || 3;
+
+  syslog(`processing ${chatLog.length} messages…`, 'info');
+
+  try {
+    const res = await fetch(`${COCREATE_URL}/api/stream-session`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        chat_log: chatLog, duration_mins: durationMins,
+        session_date: sessionDate, chatter_threshold: threshold,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      syslog(`error: ${data.error || res.status}`, 'err');
+      btn.disabled = false;
+      btn.innerHTML = '<span>◻</span> End Session + Push Log';
+      return;
+    }
+
+    const p = data.processed;
+    const b = data.brain || {};
+    syslog(`queued ${b.queued || '?'} items to brain`, 'ok');
+    syslog(`${b.moments || 0} moments · ${b.chatters || 0} chatter basins`, 'ok');
+    document.getElementById('stat-resonant').textContent = b.moments || 0;
+    document.getElementById('stat-queued').textContent   = b.queued  || 0;
+    renderSummary(p);
+
+    if (ws) { ws.close(); ws = null; }
+    stopTimer();
+    resetConnectState();
+    syslog('session complete', 'ok');
+
+  } catch (err) {
+    syslog(`fetch failed: ${err.message}`, 'err');
+    btn.disabled = false;
+    btn.innerHTML = '<span>◻</span> End Session + Push Log';
+  }
+}
+
+/* ══ SUMMARY ═════════════════════════════════════════════════════════════ */
+function renderSummary(p) {
+  if (!p) return;
+  const panel   = document.getElementById('summary-panel');
+  const s       = p.summary || {};
+  const moments = p.resonant_moments || [];
+  const chatters = p.chatters || [];
+  let html = '';
+
+  if (s.text) {
+    html += `<div class="summary-section">
+      <div class="summary-title">Session · ${escHtml(s.mood || '')} · ${p.duration_mins || 0}min</div>
+      <div class="summary-text">${escHtml(s.text)}</div>
+      ${s.topics?.length ? `<div style="margin-top:6px;font-size:11px;color:var(--faint);font-family:var(--mono)">${s.topics.map(escHtml).join(' · ')}</div>` : ''}
+    </div>`;
+  }
+
+  if (moments.length) {
+    html += `<div class="summary-section"><div class="summary-title">Resonant Moments</div>`;
+    for (const m of moments) {
+      const coh = parseFloat(m.coherence || 0);
+      const cc  = coh >= 0.8 ? 'var(--gold)' : coh >= 0.65 ? 'var(--teal)' : 'var(--faint)';
+      html += `<div class="moment-item">
+        <div class="moment-ts">${escHtml(m.timestamp || '—')}</div>
+        <div class="moment-coh" style="color:${cc}">${coh.toFixed(2)}</div>
+        <div>${escHtml(m.text || '')}</div>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+
+  if (chatters.length) {
+    html += `<div class="summary-section"><div class="summary-title">Chatter Basins</div>`;
+    for (const c of chatters) {
+      html += `<div class="chatter-item">
+        <div class="chatter-name">${escHtml(c.username || '')} <span style="color:var(--faint)">${c.message_count || 0}msg</span></div>
+        <div class="chatter-note">${escHtml(c.basin_note || '—')}</div>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+
+  panel.innerHTML = html;
+  panel.classList.add('visible');
+}
+
+/* ══ UTILS ═══════════════════════════════════════════════════════════════ */
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
