@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Journal Uploader</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Lato:wght@300;400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --ink:#1a1008;
+  --parchment:#f5ead0;
+  --parchment-dk:#e8d9b5;
+  --parchment-edge:#d4c49a;
+  --rust:#8b3a1a;
+  --rust-dim:rgba(139,58,26,0.12);
+  --seam:rgba(42,31,14,0.1);
+  --shadow:rgba(20,10,0,0.3);
+  --margin-line:#c4857a;
+}
+
+html,body{
+  min-height:100vh;
+  background:#1a1008;
+  font-family:'Lato',sans-serif;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding:40px 20px 80px;
+}
+
+/* ── PAPER SHEET ── */
+.sheet{
+  width:100%;
+  max-width:720px;
+  background:var(--parchment);
+  border-radius:2px;
+  box-shadow:
+    4px 4px 0 var(--parchment-edge),
+    8px 8px 0 rgba(0,0,0,0.15),
+    0 20px 60px rgba(0,0,0,0.5);
+  position:relative;
+  padding:48px 56px 56px 80px;
+  overflow:hidden;
+}
+
+/* ruled lines */
+.sheet::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:repeating-linear-gradient(
+    transparent,
+    transparent 31px,
+    rgba(100,130,180,0.12) 31px,
+    rgba(100,130,180,0.12) 32px
+  );
+  pointer-events:none;
+}
+
+/* red margin line */
+.sheet::after{
+  content:'';
+  position:absolute;
+  left:64px;
+  top:0;
+  bottom:0;
+  width:1.5px;
+  background:var(--margin-line);
+  opacity:0.5;
+  pointer-events:none;
+}
+
+/* paper grain overlay */
+.grain{
+  position:absolute;
+  inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;
+  opacity:0.6;
+}
+
+/* ── HEADER ── */
+.header{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  margin-bottom:32px;
+  position:relative;
+  z-index:1;
+}
+
+.wordmark{
+  font-family:'Caveat',cursive;
+  font-size:28px;
+  font-weight:700;
+  color:var(--rust);
+  letter-spacing:-0.5px;
+}
+
+.date-display{
+  font-family:'Caveat',cursive;
+  font-size:16px;
+  color:rgba(42,31,14,0.5);
+}
+
+/* ── SECTION LABELS ── */
+.field-label{
+  font-family:'Lato',sans-serif;
+  font-size:10px;
+  font-weight:400;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:rgba(42,31,14,0.35);
+  margin-bottom:6px;
+  position:relative;
+  z-index:1;
+}
+
+/* ── TITLE INPUT ── */
+.title-input{
+  width:100%;
+  background:transparent;
+  border:none;
+  outline:none;
+  font-family:'Caveat',cursive;
+  font-size:36px;
+  font-weight:600;
+  color:var(--ink);
+  line-height:1.2;
+  padding:0;
+  margin-bottom:28px;
+  position:relative;
+  z-index:1;
+  border-bottom:1.5px solid var(--parchment-edge);
+  padding-bottom:8px;
+  resize:none;
+}
+
+.title-input::placeholder{color:rgba(42,31,14,0.25)}
+
+/* ── BODY TEXTAREA ── */
+.body-area{
+  width:100%;
+  min-height:320px;
+  background:transparent;
+  border:none;
+  outline:none;
+  resize:vertical;
+  font-family:'Caveat',cursive;
+  font-size:22px;
+  font-weight:400;
+  color:var(--ink);
+  line-height:2.0;
+  padding:0;
+  position:relative;
+  z-index:1;
+  margin-bottom:40px;
+}
+
+.body-area::placeholder{color:rgba(42,31,14,0.22)}
+
+/* ── TOKEN FIELD ── */
+.token-row{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  margin-bottom:28px;
+  position:relative;
+  z-index:1;
+}
+
+.token-input{
+  flex:1;
+  background:rgba(42,31,14,0.05);
+  border:1px solid var(--parchment-edge);
+  border-radius:4px;
+  padding:8px 12px;
+  font-family:'Lato',sans-serif;
+  font-size:12px;
+  color:var(--ink);
+  outline:none;
+  transition:border-color 0.2s;
+}
+
+.token-input:focus{border-color:rgba(139,58,26,0.5)}
+.token-input::placeholder{color:rgba(42,31,14,0.3);font-style:italic}
+
+/* ── SUBMIT BUTTON ── */
+.submit-btn{
+  display:block;
+  width:100%;
+  padding:14px;
+  background:var(--rust);
+  border:none;
+  border-radius:3px;
+  font-family:'Caveat',cursive;
+  font-size:22px;
+  font-weight:600;
+  color:#f5ead0;
+  cursor:pointer;
+  letter-spacing:0.5px;
+  transition:background 0.2s, transform 0.1s;
+  position:relative;
+  z-index:1;
+  box-shadow:0 2px 8px rgba(139,58,26,0.3);
+}
+
+.submit-btn:hover{background:#7a3015}
+.submit-btn:active{transform:scale(0.99)}
+.submit-btn:disabled{background:rgba(139,58,26,0.4);cursor:not-allowed}
+
+/* ── STATUS ── */
+.status{
+  margin-top:20px;
+  font-family:'Caveat',cursive;
+  font-size:18px;
+  text-align:center;
+  min-height:28px;
+  position:relative;
+  z-index:1;
+}
+
+.status.ok{color:#2d6e3a}
+.status.err{color:#8b1a1a}
+.status.working{color:rgba(42,31,14,0.5)}
+
+/* ── DIVIDER ── */
+.divider{
+  border:none;
+  border-top:1px solid var(--parchment-edge);
+  margin:28px 0;
+  position:relative;
+  z-index:1;
+}
+
+/* ── PREVIEW TOGGLE ── */
+.preview-toggle{
+  font-family:'Lato',sans-serif;
+  font-size:11px;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  color:rgba(42,31,14,0.4);
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:4px 0;
+  position:relative;
+  z-index:1;
+  display:block;
+  margin-bottom:16px;
+}
+.preview-toggle:hover{color:var(--rust)}
+
+.preview-box{
+  display:none;
+  font-family:'Caveat',cursive;
+  font-size:20px;
+  line-height:2.0;
+  color:var(--ink);
+  background:rgba(42,31,14,0.04);
+  border-radius:4px;
+  padding:16px;
+  white-space:pre-wrap;
+  position:relative;
+  z-index:1;
+  margin-bottom:20px;
+}
+.preview-box.visible{display:block}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="grain"></div>
+
+  <div class="header">
+    <div class="wordmark">◈ Journal</div>
+    <div class="date-display" id="date-out"></div>
+  </div>
+
+  <div class="field-label">Entry Title</div>
+  <textarea class="title-input" id="title" rows="1" placeholder="What's on your mind today..."></textarea>
+
+  <div class="field-label">Entry</div>
+  <textarea class="body-area" id="body" placeholder="Write freely. This is yours."></textarea>
+
+  <button class="preview-toggle" onclick="togglePreview()">◇ preview entry</button>
+  <div class="preview-box" id="preview-box"></div>
+
+  <hr class="divider"/>
+
+  <div class="field-label">GitHub Token &nbsp;·&nbsp; needs repo write access</div>
+  <div class="token-row">
+    <input class="token-input" type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"/>
+  </div>
+
+  <button class="submit-btn" id="submit-btn" onclick="publish()">Publish Entry →</button>
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+const OWNER  = 'sKiDaGgAbAtEe';
+const REPO   = 'sKiDaGgAbAtEe.github.io';
+const BRANCH = 'main';
+const BASE   = 'app/journal';
+
+const dateEl = document.getElementById('date-out');
+const today  = new Date();
+const dateStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+dateEl.textContent = today.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+// auto-expand title
+document.getElementById('title').addEventListener('input', function(){
+  this.style.height='auto';
+  this.style.height=this.scrollHeight+'px';
+});
+
+function togglePreview(){
+  const box = document.getElementById('preview-box');
+  const body = document.getElementById('body').value.trim();
+  if(box.classList.contains('visible')){
+    box.classList.remove('visible');
+    return;
+  }
+  box.textContent = body || '(nothing written yet)';
+  box.classList.add('visible');
+}
+
+function setStatus(msg, cls='working'){
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status ' + cls;
+}
+
+async function ghGet(url, token){
+  const r = await fetch(url, {headers:{Authorization:'Bearer '+token,'Accept':'application/vnd.github+json'}});
+  if(!r.ok && r.status!==404) throw new Error('GitHub '+r.status+': '+await r.text());
+  if(r.status===404) return null;
+  return r.json();
+}
+
+async function ghPut(url, token, body){
+  const r = await fetch(url, {
+    method:'PUT',
+    headers:{Authorization:'Bearer '+token,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  });
+  if(!r.ok) throw new Error('GitHub '+r.status+': '+await r.text());
+  return r.json();
+}
+
+function buildEntryHTML(title, body, date){
+  // convert plain text paragraphs to <p> tags
+  const paragraphs = body.split(/\n\n+/).map(p=>p.trim()).filter(Boolean);
+  const firstPara  = paragraphs.shift()||'';
+  // drop cap on first paragraph
+  const dropCapPara = firstPara.length>0
+    ? `<p class="first-para"><span class="drop-cap">${firstPara[0]}</span>${escHtml(firstPara.slice(1))}</p>`
+    : '';
+  const restParas = paragraphs.map(p=>`<p>${escHtml(p)}</p>`).join('\n    ');
+  const longDate = new Date(date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>${escHtml(title)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+  body{font-family:'Caveat',cursive;font-size:22px;line-height:2.0;color:#1a1008;background:transparent;margin:0;padding:0}
+  p{margin:0 0 1.2em}
+  .first-para{margin-top:0}
+  .drop-cap{float:left;font-size:3.2em;font-weight:700;line-height:0.75;margin:0.08em 0.08em 0 0;color:#8b3a1a}
+</style>
+</head>
+<body>
+<article>
+  ${dropCapPara}
+  ${restParas}
+</article>
+</body>
+</html>`;
+}
+
+function escHtml(str){
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function b64encode(str){
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
+async function publish(){
+  const title   = document.getElementById('title').value.trim();
+  const body    = document.getElementById('body').value.trim();
+  const token   = document.getElementById('gh-token').value.trim();
+
+  if(!title){ setStatus('✗ add a title first', 'err'); return; }
+  if(!body)  { setStatus('✗ entry is empty',   'err'); return; }
+  if(!token) { setStatus('✗ need a GitHub token', 'err'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+
+  const filename    = `${dateStr}.html`;
+  const entryPath   = `${BASE}/${filename}`;
+  const manifestPath= `${BASE}/manifest.json`;
+  const apiBase     = `https://api.github.com/repos/${OWNER}/${REPO}/contents`;
+
+  try {
+    // 1. build entry HTML
+    setStatus('◈ preparing entry…');
+    const entryHTML = buildEntryHTML(title, body, dateStr);
+
+    // 2. check if entry file already exists (for sha)
+    setStatus('◈ checking for existing file…');
+    const existingEntry = await ghGet(`${apiBase}/${entryPath}`, token);
+
+    // 3. push entry file
+    setStatus('◈ writing entry file…');
+    const entryPayload = {
+      message: `journal: ${dateStr} — ${title}`,
+      content: b64encode(entryHTML),
+      branch:  BRANCH
+    };
+    if(existingEntry?.sha) entryPayload.sha = existingEntry.sha;
+    await ghPut(`${apiBase}/${entryPath}`, token, entryPayload);
+
+    // 4. fetch current manifest
+    setStatus('◈ updating manifest…');
+    const existingManifest = await ghGet(`${apiBase}/${manifestPath}`, token);
+    let entries = [];
+    if(existingManifest){
+      try{ entries = JSON.parse(atob(existingManifest.content.replace(/\n/g,''))); }catch(e){}
+    }
+
+    // remove any existing entry for today's date, add new one at front
+    entries = entries.filter(e=>e.file!==filename);
+    entries.unshift({file:filename, title, date:dateStr});
+
+    // 5. push updated manifest
+    const manifestPayload = {
+      message: `manifest: add ${dateStr}`,
+      content: b64encode(JSON.stringify(entries, null, 2)),
+      branch:  BRANCH
+    };
+    if(existingManifest?.sha) manifestPayload.sha = existingManifest.sha;
+    await ghPut(`${apiBase}/${manifestPath}`, token, manifestPayload);
+
+    setStatus(`✓ "${title}" published — ${filename}`, 'ok');
+    // clear fields on success
+    document.getElementById('title').value='';
+    document.getElementById('body').value='';
+    document.getElementById('preview-box').classList.remove('visible');
+
+  } catch(err){
+    setStatus('✗ '+err.message, 'err');
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
