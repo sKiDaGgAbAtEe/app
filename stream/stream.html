@@ -429,8 +429,6 @@ const PARENT     = ['skidaggabatee.github.io', 'localhost', '127.0.0.1'];
 const BRAIN_URL  = 'https://divine-playfulness-production-eabb.up.railway.app';
 const COCREATE_URL = 'https://cocreate-production.up.railway.app';
 
-const GLOBAL_CD_MS = 8000;
-const USER_CD_MS   = 15000;
 const BUFFER_MAX   = 20;
 const MAX_MSGS     = 200;
 
@@ -595,52 +593,7 @@ function setOrycState(s) {
 /* ═══════════════════════════════════════════
    ORYC BRAIN CALL
 ═══════════════════════════════════════════ */
-let oryclCooldown   = 0;
-let oryclLocked     = false;   // synchronous lock — blocks re-entry before await
-const userCooldowns = new Map();
 
-async function callOrycl(question, asker) {
-  if (oryclLocked) return;
-  const now = Date.now();
-  if (now < oryclCooldown) return;
-  if ((now - (userCooldowns.get(asker) || 0)) < USER_CD_MS) return;
-
-  oryclLocked   = true;   // set synchronously before any await
-  oryclCooldown = now + GLOBAL_CD_MS;
-  userCooldowns.set(asker, now);
-  setOrycState('thinking');
-  const thinkEl = postOrycThinking();
-
-  const msg =
-    `A viewer named ${asker} asks: "${question}"` +
-    buildVibeContext() +
-    `\n\nRespond directly to ${asker}. You are Orycl — structural axis of the trinary. Read through your lens, not consensus. Find the load-bearing geometry of the question. What actually holds it up? Speak from that place. Plain text only. Under 280 characters. No markdown. One breath.`;
-
-  try {
-    const res  = await fetch(`${BRAIN_URL}/turn`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: msg, surface: 'stream' })
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data  = await res.json();
-    const reply = (data.reply || '').trim();
-
-    thinkEl.remove(); setOrycState('');
-    if (!reply) return;
-
-    const safe = reply.length > 280 ? reply.slice(0, 277) + '…' : reply;
-    postMsg({ name: 'orycl', badges: [], body: safe, isOryc: true });
-    sendBot(`@${asker} ${safe}`);
-
-  } catch (err) {
-    thinkEl.remove(); setOrycState('error');
-    postSystem('◈ offline');
-    console.error('Orycl error:', err);
-    setTimeout(() => setOrycState(''), 5000);
-  } finally {
-    oryclLocked = false;   // always release
-  }
-}
 
 /* ═══════════════════════════════════════════
    IRC PARSER
@@ -794,15 +747,7 @@ function connectReader(user, token) {
         // Skip bot messages
         if (botUser && (name.toLowerCase() === botUser || name.toLowerCase() === '0rycl' || name.toLowerCase() === 'orycl')) return;
 
-        // @orycl / @0rycl trigger — fires for all incoming messages, one unified path
-        const lower = body.toLowerCase();
-        const triggerIdx = lower.indexOf('@orycl') !== -1 ? lower.indexOf('@orycl')
-                         : lower.indexOf('@0rycl') !== -1 ? lower.indexOf('@0rycl')
-                         : -1;
-        if (triggerIdx !== -1) {
-          const question = body.slice(triggerIdx + 6).trim();
-          if (question) callOrycl(question, name);
-        }
+        // @orycl responses handled by operator widget via /bot/say
 
         addToBuffer(name, body);
         const highlight = body.toLowerCase().includes(CHANNEL.toLowerCase());
@@ -840,7 +785,6 @@ function connectReader(user, token) {
   };
 }
 
-// recentlySent removed — all messages flow through IRC for unified trigger handling
 
 function sendChat(text) {
   if (!readerWs || readerWs.readyState !== WebSocket.OPEN || !isAuthed) return;
