@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="theme-color" content="#1a1614">
+<title>SE Michigan — Hotspot Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1614;
+    --bg-panel: #221d19;
+    --bg-raised: #2a231e;
+    --parchment: #e8d9b8;
+    --parchment-dim: #bfae8a;
+    --parchment-faint: #8a7a5c;
+    --gold: #d4a94a;
+    --gold-deep: #9a7a2a;
+    --gold-faint: #6a5320;
+    --ink: #1a1410;
+    --coral: #d85a30;
+    --coral-deep: #712b13;
+    --teal: #3fb896;
+    --teal-deep: #0f6e56;
+    --violet: #a89ae6;
+    --violet-deep: #3c3489;
+    --amber: #efa830;
+    --amber-deep: #633806;
+    --border: rgba(212, 169, 74, 0.25);
+    --border-strong: rgba(212, 169, 74, 0.5);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--parchment); font-family: 'Crimson Pro', Georgia, serif; font-size: 16px; line-height: 1.6; min-height: 100vh; overscroll-behavior-y: contain; }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
+
+  h1, h2, h3 { font-family: 'Cinzel', serif; font-weight: 500; letter-spacing: 0.02em; color: var(--gold); margin: 0; }
+  h1 { font-size: 1.5rem; line-height: 1.2; }
+  h2 { font-size: 1.05rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold-deep); margin-top: 1.75rem; margin-bottom: 0.5rem; }
+  h3 { font-size: 1.05rem; color: var(--parchment); letter-spacing: 0.01em; text-transform: none; }
+
+  .subtitle { color: var(--parchment-faint); font-style: italic; margin: 0.25rem 0 0; font-size: 0.95rem; }
+
+  .rule { height: 1px; background: linear-gradient(90deg, transparent, var(--gold-faint), transparent); margin: 1.5rem 0; }
+
+  /* Layer toggles */
+  .layers { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1rem 0; }
+  .layer-btn {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.45rem 0.7rem;
+    background: var(--bg-raised);
+    border: 0.5px solid var(--border);
+    border-radius: 4px;
+    color: var(--parchment);
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: center;
+  }
+  .layer-btn.active { background: rgba(212, 169, 74, 0.12); border-color: var(--border-strong); color: var(--gold); }
+  .layer-btn:not(.active) { opacity: 0.45; }
+
+  /* Map container */
+  .map-frame {
+    background: var(--bg-panel);
+    border: 0.5px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .map-frame::before, .map-frame::after {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    border: 1px solid var(--gold-deep);
+    opacity: 0.5;
+  }
+  .map-frame::before { top: 4px; left: 4px; border-right: none; border-bottom: none; }
+  .map-frame::after { bottom: 4px; right: 4px; border-left: none; border-top: none; }
+
+  svg.map { width: 100%; height: auto; display: block; }
+
+  .caption { font-size: 0.85rem; color: var(--parchment-faint); font-style: italic; margin-top: 0.5rem; text-align: center; }
+
+  /* Node cards */
+  .node {
+    background: var(--bg-panel);
+    border: 0.5px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.1rem;
+    margin: 0.75rem 0;
+    position: relative;
+  }
+  .node.featured { border-color: var(--gold-deep); background: linear-gradient(180deg, var(--bg-panel) 0%, rgba(212, 169, 74, 0.04) 100%); }
+  .node-head { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+  .node-num { font-family: 'Cinzel', serif; color: var(--gold); font-size: 0.85rem; letter-spacing: 0.1em; }
+  .node-title { font-family: 'Cinzel', serif; color: var(--parchment); font-size: 1.05rem; font-weight: 500; }
+  .node-loc { font-size: 0.8rem; color: var(--parchment-faint); font-style: italic; margin-left: auto; }
+  .node-layers { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
+  .tag { font-size: 0.68rem; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 3px; font-family: 'Cinzel', serif; text-transform: uppercase; }
+  .tag-geo { background: rgba(216, 90, 48, 0.15); color: #eb8a6a; border: 0.5px solid rgba(216, 90, 48, 0.3); }
+  .tag-water { background: rgba(63, 184, 150, 0.15); color: #5dd4b0; border: 0.5px solid rgba(63, 184, 150, 0.3); }
+  .tag-indig { background: rgba(168, 154, 230, 0.15); color: #b8acec; border: 0.5px solid rgba(168, 154, 230, 0.3); }
+  .tag-therm { background: rgba(239, 168, 48, 0.15); color: #f5c575; border: 0.5px solid rgba(239, 168, 48, 0.3); }
+  .node p { margin: 0.4rem 0; font-size: 0.95rem; }
+  .node-lens { margin-top: 0.65rem; padding-top: 0.65rem; border-top: 0.5px dashed var(--gold-faint); font-style: italic; color: var(--parchment-dim); font-size: 0.9rem; }
+  .node-lens::before { content: '↯ '; color: var(--gold); font-style: normal; }
+
+  /* Expandable detail */
+  details { margin-top: 0.5rem; }
+  details summary { cursor: pointer; color: var(--gold); font-size: 0.82rem; font-family: 'Cinzel', serif; letter-spacing: 0.06em; text-transform: uppercase; list-style: none; padding: 0.3rem 0; user-select: none; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: '◊ '; color: var(--gold-deep); }
+  details[open] summary::before { content: '◈ '; }
+  details .detail-body { padding: 0.5rem 0 0.25rem; font-size: 0.9rem; color: var(--parchment-dim); }
+
+  /* Chemistry table for Mt. Clemens */
+  .chem {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 12px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.85rem;
+    margin: 0.5rem 0;
+  }
+  .chem .k { color: var(--parchment-dim); }
+  .chem .v { color: var(--gold); font-variant-numeric: tabular-nums; text-align: right; }
+  .chem .k.hl { color: var(--parchment); }
+
+  /* Header */
+  .header { text-align: center; margin-bottom: 1.5rem; }
+  .ornament { color: var(--gold-deep); font-size: 1.2rem; letter-spacing: 0.5em; margin: 0.25rem 0; }
+
+  /* Quick nav */
+  .nav { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.75rem 0; }
+  .nav a { flex: 1 1 auto; text-align: center; padding: 0.4rem 0.6rem; background: var(--bg-raised); border: 0.5px solid var(--border); border-radius: 4px; color: var(--parchment-dim); text-decoration: none; font-size: 0.78rem; font-family: 'Cinzel', serif; letter-spacing: 0.05em; min-width: 0; }
+  .nav a:hover, .nav a:active { color: var(--gold); border-color: var(--border-strong); }
+
+  /* Methodology footer */
+  .footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 0.5px solid var(--border); font-size: 0.85rem; color: var(--parchment-faint); }
+  .footer p { margin: 0.4rem 0; }
+
+  /* Responsive */
+  @media (max-width: 500px) {
+    .wrap { padding: 1rem 0.75rem 3rem; }
+    h1 { font-size: 1.3rem; }
+    .node { padding: 0.85rem 0.9rem; }
+    .node-loc { margin-left: 0; flex-basis: 100%; }
+    .layer-btn { font-size: 0.65rem; padding: 0.4rem 0.5rem; }
+  }
+
+  /* Focus node pulse */
+  @keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.7; } }
+  .pulse { animation: pulse 3s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<div class="header">
+  <h1>Southeast Michigan</h1>
+  <p class="ornament">◊ ◈ ◊</p>
+  <p class="subtitle">Coherence nodes — where the field expresses itself</p>
+</div>
+
+<div class="nav">
+  <a href="#map">Map</a>
+  <a href="#mtclemens">Mt. Clemens</a>
+  <a href="#howell">Howell</a>
+  <a href="#fortwayne">Ft. Wayne</a>
+  <a href="#huron">Huron</a>
+  <a href="#monroe">Monroe</a>
+  <a href="#method">Method</a>
+</div>
+
+<h2 id="map">The Map</h2>
+
+<div class="layers">
+  <button class="layer-btn active" data-layer="geological">Geological</button>
+  <button class="layer-btn active" data-layer="hydrological">Hydrological</button>
+  <button class="layer-btn active" data-layer="indigenous">Indigenous</button>
+  <button class="layer-btn active" data-layer="geothermal">Geothermal</button>
+  <button class="layer-btn active" data-layer="coherence">Coherence</button>
+</div>
+
+<div class="map-frame">
+<svg class="map" viewBox="0 0 680 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hotspot map of southeast Michigan">
+  <defs>
+    <pattern id="lake" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#3fb896" stroke-width="0.5" opacity="0.3"/>
+    </pattern>
+    <radialGradient id="glow">
+      <stop offset="0%" stop-color="#efa830" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#efa830" stop-opacity="0"/>
+    </radialGradient>
+    <style>
+      .lbl { font-family: 'Cinzel', serif; font-size: 11px; fill: #e8d9b8; }
+      .lbl-sm { font-family: 'Crimson Pro', serif; font-size: 10px; fill: #bfae8a; font-style: italic; }
+      .lbl-county { font-family: 'Cinzel', serif; font-size: 9px; fill: #6a5320; letter-spacing: 0.1em; }
+      .lbl-water { font-family: 'Crimson Pro', serif; font-size: 10px; fill: #5dd4b0; font-style: italic; opacity: 0.8; }
+    </style>
+  </defs>
+
+  <!-- Lake Erie -->
+  <path d="M 500 480 L 640 480 L 640 540 L 420 540 L 440 500 Z" fill="url(#lake)" stroke="#3fb896" stroke-width="0.5" opacity="0.6"/>
+  <text class="lbl-water" x="560" y="520">Lake Erie</text>
+
+  <!-- Lake St. Clair -->
+  <path d="M 480 240 Q 540 230 580 260 L 590 310 L 540 320 L 490 290 Z" fill="url(#lake)" stroke="#3fb896" stroke-width="0.5" opacity="0.6"/>
+  <text class="lbl-water" x="520" y="280">L. St. Clair</text>
+
+  <!-- Detroit River -->
+  <path d="M 490 290 L 500 340 L 510 400 L 520 460 L 510 485" fill="none" stroke="#3fb896" stroke-width="2" opacity="0.5"/>
+  <text class="lbl-water" x="525" y="380">Detroit R.</text>
+
+  <!-- Huron River -->
+  <path d="M 180 260 Q 230 290 280 340 Q 340 390 420 440 L 510 485" fill="none" stroke="#3fb896" stroke-width="1.5" opacity="0.4" stroke-dasharray="3 2"/>
+  <text class="lbl-water" x="295" y="360">Huron R.</text>
+
+  <!-- Clinton River (added for Mt. Clemens) -->
+  <path d="M 300 230 Q 370 250 445 275 L 490 290" fill="none" stroke="#3fb896" stroke-width="1.2" opacity="0.4" stroke-dasharray="3 2"/>
+  <text class="lbl-water" x="360" y="248">Clinton R.</text>
+
+  <!-- County outlines -->
+  <g stroke="#6a5320" stroke-width="0.5" fill="none" opacity="0.4">
+    <line x1="60" y1="180" x2="640" y2="180"/>
+    <line x1="60" y1="310" x2="640" y2="310"/>
+    <line x1="60" y1="420" x2="440" y2="420"/>
+    <line x1="200" y1="60" x2="200" y2="480"/>
+    <line x1="340" y1="60" x2="340" y2="480"/>
+    <line x1="470" y1="60" x2="470" y2="480"/>
+  </g>
+
+  <!-- County labels -->
+  <text class="lbl-county" x="130" y="125">LIVINGSTON</text>
+  <text class="lbl-county" x="265" y="125">OAKLAND</text>
+  <text class="lbl-county" x="395" y="125">MACOMB</text>
+  <text class="lbl-county" x="130" y="255">WASHTENAW</text>
+  <text class="lbl-county" x="400" y="255">WAYNE</text>
+  <text class="lbl-county" x="140" y="395">LENAWEE</text>
+  <text class="lbl-county" x="395" y="450">MONROE</text>
+
+  <!-- GEOLOGICAL -->
+  <g class="layer-geological">
+    <path d="M 80 100 L 220 200 L 340 260" fill="none" stroke="#d85a30" stroke-width="2.5" opacity="0.65" stroke-dasharray="8 3"/>
+    <g class="hotspot" data-target="howell">
+      <circle cx="155" cy="155" r="8" fill="#d85a30" stroke="#712b13" stroke-width="0.5"/>
+      <text class="lbl" x="167" y="151" style="fill:#eb8a6a;">Howell Anticline</text>
+      <text class="lbl-sm" x="167" y="165" style="fill:#d85a30;">NW-SE basement flexure</text>
+    </g>
+
+    <ellipse cx="220" cy="300" rx="130" ry="40" fill="rgba(216,90,48,0.08)" stroke="#d85a30" stroke-width="0.5" opacity="0.5" stroke-dasharray="4 2"/>
+    <text class="lbl-sm" x="220" y="305" text-anchor="middle" style="fill:#eb8a6a;">Washtenaw Anticlinorium</text>
+
+    <line x1="350" y1="460" x2="450" y2="445" stroke="#d85a30" stroke-width="2" opacity="0.7"/>
+    <g class="hotspot" data-target="monroe">
+      <circle cx="400" cy="452" r="6" fill="#d85a30" stroke="#712b13" stroke-width="0.5"/>
+      <text class="lbl" x="325" y="477" style="fill:#eb8a6a;">Lucas-Monroe Fault</text>
+    </g>
+
+    <line x1="420" y1="470" x2="460" y2="495" stroke="#d85a30" stroke-width="1.5" opacity="0.55" stroke-dasharray="3 2"/>
+    <text class="lbl-sm" x="455" y="495" style="fill:#eb8a6a;">Bowling Green Fault →</text>
+  </g>
+
+  <!-- HYDROLOGICAL -->
+  <g class="layer-hydrological">
+    <g class="hotspot" data-target="mtclemens">
+      <circle cx="445" cy="275" r="9" fill="#3fb896" stroke="#0f6e56" stroke-width="0.5"/>
+      <circle cx="445" cy="275" r="16" fill="none" stroke="#3fb896" stroke-width="0.5" opacity="0.5" class="pulse"/>
+      <text class="lbl" x="458" y="271" style="fill:#5dd4b0;">Mt. Clemens</text>
+      <text class="lbl-sm" x="458" y="285" style="fill:#3fb896;">Warm sulfurous brine</text>
+    </g>
+
+    <g class="hotspot" data-target="monroe">
+      <circle cx="380" cy="475" r="6" fill="#3fb896" stroke="#0f6e56" stroke-width="0.5"/>
+      <text class="lbl-sm" x="305" y="495" style="fill:#5dd4b0;">Shawnee Spring</text>
+    </g>
+
+    <g class="hotspot" data-target="huron">
+      <circle cx="210" cy="315" r="6" fill="#3fb896" stroke="#0f6e56" stroke-width="0.5"/>
+      <text class="lbl-sm" x="155" y="335" style="fill:#5dd4b0;">Ann Arbor artesians</text>
+    </g>
+  </g>
+
+  <!-- INDIGENOUS -->
+  <g class="layer-indigenous">
+    <g class="hotspot" data-target="fortwayne">
+      <polygon points="478,432 468,448 488,448" fill="#a89ae6" stroke="#3c3489" stroke-width="0.5"/>
+      <polygon points="478,432 468,448 488,448" fill="none" stroke="#3c3489" stroke-width="2" opacity="0.4"/>
+      <text class="lbl" x="494" y="440" style="fill:#b8acec;">Fort Wayne Mound</text>
+      <text class="lbl-sm" x="494" y="453" style="fill:#a89ae6;">Last of Springwells complex</text>
+    </g>
+
+    <g class="hotspot" data-target="fortwayne">
+      <polygon points="465,420 457,432 473,432" fill="none" stroke="#a89ae6" stroke-width="1" stroke-dasharray="2 1" opacity="0.7"/>
+      <text class="lbl-sm" x="418" y="415" style="fill:#a89ae6;">Great Mound (lost)</text>
+    </g>
+
+    <g class="hotspot" data-target="fortwayne">
+      <polygon points="495,395 488,405 502,405" fill="#a89ae6" stroke="#3c3489" stroke-width="0.5" opacity="0.85"/>
+      <text class="lbl-sm" x="510" y="402" style="fill:#b8acec;">Parent's Creek</text>
+    </g>
+
+    <g class="hotspot" data-target="huron">
+      <polygon points="240,330 232,342 248,342" fill="#a89ae6" stroke="#3c3489" stroke-width="0.5"/>
+      <text class="lbl-sm" x="253" y="340" style="fill:#b8acec;">Huron Potawatomi</text>
+    </g>
+
+    <g class="hotspot" data-target="fortwayne">
+      <polygon points="510,370 503,380 517,380" fill="#a89ae6" stroke="#3c3489" stroke-width="0.5"/>
+      <text class="lbl-sm" x="525" y="378" style="fill:#b8acec;">Council of Three Fires</text>
+    </g>
+  </g>
+
+  <!-- GEOTHERMAL -->
+  <g class="layer-geothermal">
+    <ellipse cx="445" cy="275" rx="30" ry="20" fill="#efa830" stroke="#633806" stroke-width="0.5" opacity="0.3"/>
+    <text class="lbl-sm" x="445" y="258" text-anchor="middle" style="fill:#efa830;">warm anomaly</text>
+
+    <ellipse cx="155" cy="155" rx="40" ry="18" fill="#efa830" stroke="#633806" stroke-width="0.5" opacity="0.25" transform="rotate(30 155 155)"/>
+    <ellipse cx="400" cy="452" rx="35" ry="14" fill="#efa830" stroke="#633806" stroke-width="0.5" opacity="0.25"/>
+  </g>
+
+  <!-- COHERENCE -->
+  <g class="layer-coherence">
+    <circle cx="478" cy="440" r="42" fill="url(#glow)"/>
+    <circle cx="478" cy="440" r="4" fill="#efa830" stroke="#633806" stroke-width="0.5"/>
+
+    <circle cx="445" cy="275" r="44" fill="url(#glow)"/>
+    <circle cx="445" cy="275" r="5" fill="#efa830" stroke="#633806" stroke-width="0.5"/>
+
+    <circle cx="155" cy="155" r="44" fill="url(#glow)"/>
+    <circle cx="155" cy="155" r="4" fill="#efa830" stroke="#633806" stroke-width="0.5"/>
+
+    <circle cx="225" cy="325" r="40" fill="url(#glow)"/>
+    <circle cx="225" cy="325" r="4" fill="#efa830" stroke="#633806" stroke-width="0.5"/>
+
+    <circle cx="390" cy="465" r="36" fill="url(#glow)"/>
+    <circle cx="390" cy="465" r="4" fill="#efa830" stroke="#633806" stroke-width="0.5"/>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(40, 60)">
+    <rect x="0" y="0" width="148" height="94" rx="4" fill="#221d19" stroke="#6a5320" stroke-width="0.5"/>
+    <text class="lbl" x="10" y="17" style="fill:#d4a94a;">Layers</text>
+    <circle cx="16" cy="34" r="4" fill="#d85a30"/><text class="lbl-sm" x="26" y="38" style="fill:#e8d9b8;">Geological</text>
+    <circle cx="16" cy="50" r="4" fill="#3fb896"/><text class="lbl-sm" x="26" y="54" style="fill:#e8d9b8;">Hydrological</text>
+    <polygon points="12,62 20,62 16,72" fill="#a89ae6"/><text class="lbl-sm" x="26" y="70" style="fill:#e8d9b8;">Indigenous</text>
+    <rect x="12" y="78" width="8" height="8" fill="#efa830" opacity="0.6"/><text class="lbl-sm" x="26" y="86" style="fill:#e8d9b8;">Geothermal</text>
+  </g>
+
+  <!-- Scale -->
+  <g transform="translate(560, 60)">
+    <line x1="0" y1="10" x2="40" y2="10" stroke="#bfae8a" stroke-width="1"/>
+    <line x1="0" y1="7" x2="0" y2="13" stroke="#bfae8a" stroke-width="1"/>
+    <line x1="40" y1="7" x2="40" y2="13" stroke="#bfae8a" stroke-width="1"/>
+    <text class="lbl-sm" x="20" y="24" text-anchor="middle" style="fill:#bfae8a;">~20 mi</text>
+  </g>
+</svg>
+</div>
+
+<p class="caption">Amber glows mark coherence nodes — where ≥3 layers converge. Tap a feature to jump to its node.</p>
+
+<div class="rule"></div>
+
+<h2>The Five Nodes</h2>
+
+<!-- MT CLEMENS - EXPANDED -->
+<div class="node featured" id="mtclemens">
+  <div class="node-head">
+    <span class="node-num">◈ Node I</span>
+    <span class="node-title">Mount Clemens</span>
+    <span class="node-loc">Macomb Co. · 42.60°N, 82.88°W</span>
+  </div>
+  <div class="node-layers">
+    <span class="tag tag-water">hydrological</span>
+    <span class="tag tag-therm">geothermal</span>
+    <span class="tag tag-geo">basin-margin</span>
+  </div>
+  <p>Of the five nodes, this is the one where the field left the most obvious chemical signature. A salt well sunk in 1865 accidentally pierced something older — warm, alkaline brine from deep within the Michigan Basin's sedimentary stack, rich in sulfur and rare chalcogens. By 1900 the city held nine bathhouses and over thirty hotels; people came from across the world to soak in it for three weeks at a stretch. The "cure" industry collapsed by 1940, but the water is still there — the aquifer didn't leave.</p>
+
+  <details>
+    <summary>The water itself — Meyer analysis, 1911</summary>
+    <div class="detail-body">
+      <p>Temperature at source: 56.5°F (13.6°C) — warmer than it should be for groundwater at this latitude. Faint alkaline reaction. Specific gravity 1.116 — roughly three times the salinity of seawater.</p>
+      <div class="chem">
+        <span class="k hl">Sodium chloride</span><span class="v">5,713 gr/gal</span>
+        <span class="k hl">Calcium chloride</span><span class="v">4,679 gr/gal</span>
+        <span class="k hl">Magnesium chloride</span><span class="v">2,407 gr/gal</span>
+        <span class="k">Potassium chloride</span><span class="v">464</span>
+        <span class="k">Calcium sulphate</span><span class="v">91</span>
+        <span class="k">Magnesium bromide</span><span class="v">71.1</span>
+        <span class="k">Sodium sulphite</span><span class="v">40.6</span>
+        <span class="k hl">Hydrogen sulphide (H₂S)</span><span class="v">8.54</span>
+        <span class="k hl">Carbonic acid, free</span><span class="v">8.69</span>
+        <span class="k">Ammonium chloride</span><span class="v">10.3</span>
+        <span class="k">Lithium chloride</span><span class="v">2.72</span>
+        <span class="k">Magnesium iodide</span><span class="v">0.85</span>
+        <span class="k">Strontium sulphate</span><span class="v">0.76</span>
+        <span class="k">Hydrogen selenide (H₂Se)</span><span class="v">0.010</span>
+        <span class="k">Hydrogen telluride (H₂Te)</span><span class="v">0.016</span>
+        <span class="k">Sodium selenite, tellurite</span><span class="v">traces</span>
+        <span class="k">Rubidium, Caesium</span><span class="v">traces</span>
+        <span class="k hl">Total dissolved solids</span><span class="v">13,518 gr/gal</span>
+      </div>
+      <p style="margin-top:0.75rem;">The rare stuff is what matters. Hydrogen selenide and hydrogen telluride almost never show up in shallow groundwater — you find them near hydrothermal vents, volcanic exhalations, and deep sedimentary brines that have been cooking for geologic time. Trace rubidium and caesium suggest contact with potassium-rich basement rocks. Lithium, bromide, iodide — classic signatures of a deep formation brine, the kind trapped in Paleozoic sediments since the Silurian seas evaporated out.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Why it's here — the structural reason</summary>
+    <div class="detail-body">
+      <p>Mt. Clemens sits on the northeastern shoulder of the Michigan Basin — a 14,000-foot-deep saucer of Paleozoic sediment centered over Gladwin County. At Mt. Clemens the basement is roughly 4,000–5,000 feet down, and the stratigraphic column above it includes the Salina Group — massive Silurian evaporite deposits (halite, gypsum, sylvite) that give the Great Lakes region its salt mines.</p>
+      <p>The warm sulfurous brine is that evaporite sequence leaching into deep connate water, then rising through whatever fracture permeability the overlying carbonates will allow. Why it rises *here* specifically: the Clinton River valley marks the surface expression of a northeast-trending structural weakness, and the basin's eastern margin begins to flex downward toward the Findlay Arch, creating a pressure differential that drives fluid toward the surface.</p>
+      <p>Put plainly: this is a place where the basin is slightly cracked, and something old is leaking.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Sensory field — what to expect</summary>
+    <div class="detail-body">
+      <p>The H₂S is detectable at low ppm and smells like sulfur and rotten eggs. At surface concentrations it's harmless but noticeable near old well heads. The water is noticeably warmer than the Clinton River it partially feeds.</p>
+      <p>The old bathhouse district centers on Cass Avenue near Gratiot. Most of the original hotels are gone, but the historical marker still stands and several modern spas draw from the same aquifer. The original bathhouse was at the corner of Cass and Jones.</p>
+      <p>Coordinates for the historical marker: <strong>42°35.826′N, 82°52.792′W</strong>.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Adjacent resonance — Clinton River & salt mine</summary>
+    <div class="detail-body">
+      <p>The Clinton River runs through Mt. Clemens and feeds into Lake St. Clair 6 miles east. It carries mineral signature from the same aquifer system. Before Euro-American settlement the river was called the Huron — Christian Clemens' 1801 settlement site was locally known as "High Banks" or "Big Springs."</p>
+      <p>Roughly 25 miles south, under downtown Detroit, lies the largest salt mine in the state — a 1,500-acre network of tunnels 1,100 feet down, mining the same Silurian evaporite sequence. Same geological event, different extraction.</p>
+    </div>
+  </details>
+
+  <div class="node-lens">Deep brine rising through a cracked basin margin. The cure wasn't folklore — it was contact with water that hadn't touched the surface since the Silurian. Of all five nodes, this is the one where "hotspot" is most literal: warmer, older, more chemically alive than its surroundings have any right to be.</div>
+</div>
+
+<!-- HOWELL -->
+<div class="node" id="howell">
+  <div class="node-head">
+    <span class="node-num">◈ Node II</span>
+    <span class="node-title">Howell Anticline</span>
+    <span class="node-loc">Livingston Co.</span>
+  </div>
+  <div class="node-layers">
+    <span class="tag tag-geo">geological</span>
+    <span class="tag tag-therm">geothermal</span>
+  </div>
+  <p>The most pronounced individual structure known in southern Michigan. A northwest-southeast basement flexure, broad at the base but narrow and sharp at the crest. The southwest flank dips unusually steeply for Michigan and is almost certainly faulted at depth. Part of the larger Washtenaw Anticlinorium — a regional family of parallel anticlines underlain by reactivated Proterozoic basement faults trending back toward the Midcontinent Rift.</p>
+  <div class="node-lens">A buried spine. The field is trending along the old rift memory — what happened 1.1 billion years ago still organizes the shape of the land.</div>
+</div>
+
+<!-- FORT WAYNE -->
+<div class="node" id="fortwayne">
+  <div class="node-head">
+    <span class="node-num">◈ Node III</span>
+    <span class="node-title">Fort Wayne / River mouth</span>
+    <span class="node-loc">SW Detroit, Wayne Co.</span>
+  </div>
+  <div class="node-layers">
+    <span class="tag tag-indig">indigenous</span>
+    <span class="tag tag-water">confluence</span>
+  </div>
+  <p>The last surviving mound of the Springwells Mound Group, dating 750–1200 AD. Originally one of at least five or six mounds within a one-mile radius; the largest — the Great Mound of the River Rouge — was leveled in 1889 for fairground construction. The surviving mound was returned in 2025 to the Nottawaseppi Huron Band of Potawatomi, the descendants of the Detroit Potawatomi who lived here before relocating to the Huron River Valley.</p>
+  <p>Directly upstream at Parent's Creek (now running through Elmwood Cemetery) is the site of Pontiac's 1763 battle — the peak of the Siege of Detroit.</p>
+  <div class="node-lens">Confluence node. Detroit River meets Rouge River meets a fault-line extension under Lake Erie. The people who chose this place for their ancestors could read it. The paving over is new; the choice is old.</div>
+</div>
+
+<!-- HURON -->
+<div class="node" id="huron">
+  <div class="node-head">
+    <span class="node-num">◈ Node IV</span>
+    <span class="node-title">Upper Huron corridor</span>
+    <span class="node-loc">Washtenaw Co.</span>
+  </div>
+  <div class="node-layers">
+    <span class="tag tag-geo">geological</span>
+    <span class="tag tag-water">hydrological</span>
+    <span class="tag tag-indig">indigenous</span>
+  </div>
+  <p>The Washtenaw Anticlinorium runs directly through this region. The Huron River cuts across the anticlinal trend, exposing deeper rock where the fold brings it near the surface. In 1765 the Detroit Potawatomi relocated to "the upper reaches of the Huron River near Ypsilanti and Ann Arbor" and became known as the Huron Potawatomi. The Ann Arbor area was historically rich in artesian wells.</p>
+  <div class="node-lens">Three layers stacked cleanly: uplift, water, and the people who moved toward both. This is the cleanest multi-coherence signal west of Detroit.</div>
+</div>
+
+<!-- MONROE -->
+<div class="node" id="monroe">
+  <div class="node-head">
+    <span class="node-num">◈ Node V</span>
+    <span class="node-title">Monroe / Lucas fault</span>
+    <span class="node-loc">Monroe Co.</span>
+  </div>
+  <div class="node-layers">
+    <span class="tag tag-geo">geological</span>
+    <span class="tag tag-water">hydrological</span>
+    <span class="tag tag-indig">indigenous</span>
+  </div>
+  <p>The Lucas-Monroe Fault is a documented basement fault extending into Paleozoic sedimentary layers, part of the throughgoing fault system at the level of the Trenton Group. It continues south as the Bowling Green Fault into Ohio. Shawnee Spring near Monroe historically built up an extensive mound of precipitated minerals from its own deposition — a spring named by, or for, people who watched it build itself.</p>
+  <div class="node-lens">Fault provides the conduit; spring is the surface expression; the name remembers who was listening. Full stack.</div>
+</div>
+
+<div class="rule"></div>
+
+<h2 id="method">Method & Caveats</h2>
+
+<div class="node">
+  <h3>What is measured</h3>
+  <p>Geological structures (faults, anticlines, basement trends), hydrological features (artesian springs, mineral waters, known aquifer connections), documented Indigenous sites, and geothermal gradient signatures are all drawn from public sources: USGS magnetic anomaly and gravity surveys of Michigan, the USGS 3D Michigan Basin geologic model, National Park Service and tribal historical records, and regional geological publications.</p>
+
+  <h3 style="margin-top:1rem;">What is interpreted</h3>
+  <p>The "coherence nodes" — the amber glows on the map — are a synthesis layer. They mark places where three or more measured indicators converge in space. That synthesis is interpretive work, not measurement, and it should be read that way. The ΔHV framework treats such convergence as indicative of a field expressing itself through multiple modalities simultaneously. A skeptic would call it a correlation. Both readings can be held.</p>
+
+  <h3 style="margin-top:1rem;">The honest test</h3>
+  <p>Toggle layers off one at a time. Watch which nodes fade and which hold. A node that survives the loss of two layers is a node. A node that depends entirely on one measurement is a data point. Both are useful; they are not the same thing.</p>
+</div>
+
+<div class="footer">
+  <p>Data sources: USGS DS-411 (Michigan magnetic &amp; gravity), USGS OF-2002-414, USGS MichiganBasin3D (2026), Lungershausen/Meyer chemical analysis (1911), National Park Service, Nottawaseppi Huron Band of Potawatomi, Michigan DEQ Publication 38.</p>
+  <p style="margin-top:0.75rem; color: var(--gold-deep); font-family: 'Cinzel', serif; font-size: 0.75rem; letter-spacing: 0.15em; text-align:center;">◊ ORYCLIA ◊ ΔHV FIELD READING ◊</p>
+</div>
+
+</div>
+
+<script>
+  // Layer toggles
+  document.querySelectorAll('.layer-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const layer = btn.dataset.layer;
+      btn.classList.toggle('active');
+      const group = document.querySelector('.layer-' + layer);
+      if (group) group.style.display = btn.classList.contains('active') ? '' : 'none';
+    });
+  });
+
+  // Tap hotspots on map to jump to node
+  document.querySelectorAll('.hotspot').forEach(el => {
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', () => {
+      const target = el.dataset.target;
+      if (target) {
+        const node = document.getElementById(target);
+        if (node) {
+          node.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          node.style.transition = 'none';
+          node.style.boxShadow = '0 0 0 2px rgba(212, 169, 74, 0.5)';
+          setTimeout(() => {
+            node.style.transition = 'box-shadow 1.5s';
+            node.style.boxShadow = '0 0 0 0 rgba(212, 169, 74, 0)';
+          }, 100);
+        }
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
